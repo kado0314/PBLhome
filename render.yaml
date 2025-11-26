@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: pblcamera
+    env: python
+    buildCommand: |
+      apt-get update && apt-get install -y fonts-ipafont-gothic
+      pip install --upgrade pip
+      pip install -r requirements.txt
+    startCommand: gunicorn run:app --timeout 120
+    plan: free
