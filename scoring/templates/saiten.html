@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ファッション採点</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fashion.css') }}">
+    <link rel="icon" href="https://github.com/kado0314/PBLcamera/blob/main/static/image/huku.png?raw=true" type="image/png">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="hamburger-menu" id="hamburgerMenu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <nav class="sidebar" id="sidebar">
+        <ul>
+            <li>
+                <a href="/">
+                    <div style="width:40px; text-align:center;"><i class="fa-solid fa-house fa-lg"></i></div>
+                    <span>ホーム</span>
+                </a>
+            </li>
+            <li>
+                <a href="/scoring/saiten">
+                    <div style="width:40px; text-align:center;"><i class="fa-solid fa-shirt fa-lg" style="color: #ec4899;"></i></div>
+                    <span>ファッション採点</span>
+                </a>
+            </li>
+            <li>
+                <a href="/Typamera/templates/typing.html">
+                    <div style="width:40px; text-align:center;"><i class="fa-solid fa-keyboard fa-lg" style="color: #fbbf24;"></i></div>
+                    <span>タイピング</span>
+                </a>
+            </li>
+            <li>
+                <a href="/Privacy/index.html">
+                    <div style="width:40px; text-align:center;"><i class="fa-solid fa-video fa-lg" style="color: #6366f1;"></i></div>
+                    <span>プライバシーガード</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    <h1>ファッション採点</h1>
+    
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('scoring.saiten') }}">
+        
+        <label>画像をアップロード</label><br>
+        <input type="file" name="image_file" accept="image/*" capture="camera" id="imageInput"><br>
+        
+        <button type="button" id="openCameraBtn">撮影</button><br>
+        <div id="cameraArea">
+            <video id="cameraVideo" autoplay playsinline></video>
+            <button type="button" id="takePhotoBtn">写真を撮る</button>
+        </div>
+        <img id="imagePreview" src="">
+
+        <label for="user_gender">性別</label><br>
+        <select name="user_gender" id="user_gender">
+            <option value="neutral" {% if selected_gender == 'neutral' %}selected{% endif %}>指定なし (Neutral)</option>
+            <option value="male" {% if selected_gender == 'male' %}selected{% endif %}>男性 (Male)</option>
+            <option value="female" {% if selected_gender == 'female' %}selected{% endif %}>女性 (Female)</option>
+        </select>
+        <br><br>
+
+        <label for="intended_scene">TPO (シーン)</label><br>
+        <select name="intended_scene" id="intended_scene">
+            <option value="date" {% if selected_scene == 'date' %}selected{% endif %}>デート</option>
+            <option value="work" {% if selected_scene == 'work' %}selected{% endif %}>仕事</option>
+            <option value="friends" {% if selected_scene == 'friends' %}selected{% endif %}>友達と遊ぶ</option>
+            </select>
+        <br><br>
+
+        <button type="submit">採点する</button>
+    </form>
+
+    {% if uploaded_image_data %}
+    <hr>
+    <div class="target">
+        <h3>採点対象</h3>
+        <img src="{{ uploaded_image_data }}" style="max-width:300px;">
+    </div>
+    {% endif %}
+
+    {% if score is not none %}
+    <hr>
+    <div class="results">
+        <div class="res-head"><h2><span class="label">採点結果</span><span class="score">{{ score }} 点</span></h2></div>
+        <div class="res-body">
+            <div class="rating">
+                <p>{{ recommendation }}</p>
+                <ul>
+                    {% for f in feedback %}
+                        <li>{{ f }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            {% if radar_chart_data %}
+            <div class="chart">
+                <img src="{{ radar_chart_data }}" alt="レーダーチャート">
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <script src="{{ url_for('static', filename='js/saiten.js') }}"></script>
+
+    <script>
+        const hamburger = document.getElementById('hamburgerMenu');
+        const sidebar = document.getElementById('sidebar');
+
+        hamburger.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            hamburger.classList.toggle('open');
+        });
+    </script>
+</body>
+</html>
