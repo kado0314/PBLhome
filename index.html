@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>アプリポータル</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;500;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;500;700&display=swap" rel="stylesheet">
     
@@ -85,10 +82,8 @@
 </head>
 <body class="h-screen w-screen bg-gray-900 text-white relative">
 
-    <!-- Dynamic Background Elements -->
     <div id="bgBlob" class="bg-blob w-[500px] h-[500px] absolute-center"></div>
 
-    <!-- Navigation Header -->
     <nav class="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-50">
         <div class="text-2xl font-bold tracking-tighter" id="navLogo">
             Q株式会社
@@ -98,25 +93,20 @@
         </div>
     </nav>
 
-    <!-- Main Content Area -->
     <main class="w-full h-full relative flex items-center justify-center">
         
-        <!-- Big Background Text (Fixed behind image) -->
         <h1 id="bgText" class="absolute-center text-[15vw] sm:text-[18vw] font-extrabold opacity-10 select-none whitespace-nowrap tracking-tighter z-0 transition-colors duration-700 text-white">
             FASHION
         </h1>
 
-        <!-- Floating Background Icons (Particle effects) -->
         <div id="particles" class="absolute inset-0 overflow-hidden pointer-events-none z-0">
             <i class="fa-solid fa-star absolute text-4xl opacity-20 top-1/4 left-1/4 particle"></i>
             <i class="fa-solid fa-circle absolute text-2xl opacity-20 bottom-1/3 right-1/4 particle"></i>
             <i class="fa-solid fa-square absolute text-5xl opacity-20 top-1/3 right-1/3 particle"></i>
         </div>
 
-        <!-- Content Wrapper -->
         <div class="relative z-10 w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center px-6">
             
-            <!-- Left Side: Text Info -->
             <div class="text-center lg:text-left order-2 lg:order-1 mt-10 lg:mt-0">
                 <h2 id="slideTitle" class="text-4xl sm:text-6xl font-bold mb-3 slide-element">
                     Saiten
@@ -126,23 +116,20 @@
                 </p>
                 
                 <div class="slide-element">
-                    <a id="visitLink" href="#" target="_blank" class="visit-btn inline-flex items-center gap-4 bg-white text-black px-10 py-4 rounded-full font-bold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                    <a id="visitLink" href="#" class="visit-btn inline-flex items-center gap-4 bg-white text-black px-10 py-4 rounded-full font-bold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1">
                         <span>アプリを開く</span>
                         <i class="fa-solid fa-arrow-right"></i>
                     </a>
                 </div>
             </div>
 
-            <!-- Right Side: Hero Visual -->
             <div class="relative h-[40vh] lg:h-[60vh] flex items-center justify-center order-1 lg:order-2">
-                <!-- The "Product" Image/Icon -->
                 <div id="heroVisual" class="hero-visual text-[150px] sm:text-[200px] lg:text-[250px] text-blue-500 floating">
                     <i class="fa-solid fa-shirt"></i>
                 </div>
             </div>
         </div>
 
-        <!-- Slider Controls (Right Aligned) -->
         <div class="absolute bottom-10 w-full flex justify-center md:justify-end px-10 gap-6 z-20">
             <button id="prevBtn" class="nav-btn w-16 h-16 rounded-full border border-white/30 flex items-center justify-center text-xl bg-white/10 hover:bg-white/20">
                 <i class="fa-solid fa-chevron-left"></i>
@@ -153,7 +140,6 @@
         </div>
     </main>
 
-    <!-- GSAP CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
     <script>
@@ -164,7 +150,8 @@
                 title: "ファッション採点",
                 bgText: "FASHION",
                 desc: "AIがあなたのコーディネートを瞬時に採点。客観的なスコアで、毎日のファッション選びをもっと楽しく。",
-                url: "Grading/Grading.html",
+                // ▼▼▼ 修正箇所: FlaskのルートURLへ変更 ▼▼▼
+                url: "/scoring/saiten",
                 color: "#ec4899", // pink-500
                 darkColor: "#831843", // pink-900
                 icon: "fa-shirt",
@@ -175,7 +162,8 @@
                 title: "背後検知システム",
                 bgText: "SECURITY",
                 desc: "Webカメラを活用した防犯システム。背後に人が近づいたことを検知し、即座に通知画面でお知らせします。",
-                url: "Privacy/index.html",
+                // ▼▼▼ 修正箇所: Privacyフォルダ内のパスへ変更 ▼▼▼
+                url: "/Privacy/index.html",
                 color: "#6366f1", // indigo-500
                 darkColor: "#312e81", // indigo-900
                 icon: "fa-video",
@@ -186,7 +174,8 @@
                 title: "タイピング",
                 bgText: "TYPING",
                 desc: "カメラ機能と連動した究極のタイピングゲーム。スピードと正確性が試されます。",
-                url: "Typamera/templates/typing.html",
+                // ▼▼▼ 修正箇所: Typameraフォルダ内のパスへ変更 ▼▼▼
+                url: "/Typamera/templates/typing.html",
                 color: "#fbbf24", // amber-400
                 darkColor: "#78350f", // amber-900
                 icon: "fa-keyboard",
