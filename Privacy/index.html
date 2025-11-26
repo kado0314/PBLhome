@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Webカメラ監視＆画像差分通知</title>
+    
+    <link rel="icon" href="css/kansikameraaikon.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <link rel="stylesheet" href="css/style.css"> 
+</head>
+<body>
+    <div class="hamburger-menu" id="hamburgerMenu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <nav class="sidebar" id="sidebar">
+        <ul>
+            <li>
+                <a href="https://camerapp.onrender.com/">
+                    <img src="css/2_1120100308.png" alt="ホーム">
+                    <span>ホーム</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://kado0314.github.io/PBLcamera/Typamera/templates/typing.html">
+                    <img src="css/kibodoaikon.png" alt="タイピング">
+                    <span>タイピング</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://camerapp.onrender.com/scoring/saiten">
+                    <img src="css/fassyonaikon.png" alt="ファッション採点">
+                    <span>ファッション採点</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    
+    <h1>Webカメラ監視システム (画像差分)</h1>
+
+    <div id="main-content-container">
+        
+        <div id="left-column">
+            
+            <div id="controls">
+                <button id="startButton">監視スタート</button>
+                <button id="stopButton" disabled>監視停止</button>
+
+                <div class="setting">
+                    <label for="cooldownTimeSec">通知クールダウン時間 (秒):</label>
+                    <input type="number" id="cooldownTimeSec" min="1" max="600" value="5" style="width: 60px; text-align: center;">
+                    秒
+                </div>
+                
+                <div class="setting">
+                    <label for="thresholdSlider">感度レベル (しきい値): <span id="thresholdValue">50</span></label>
+                    <input type="range" id="thresholdSlider" min="0" max="200" value="50">
+                </div>
+                
+                <div class="setting">
+                    <label for="notificationTitle">通知タイトル:</label>
+                    <input type="text" id="notificationTitle" value="🚨 動きを検出しました！">
+                </div>
+
+                <div class="setting">
+                    <label for="notificationBody">通知本文:</label>
+                    <input type="text" id="notificationBody" value="画面を確認してください。">
+                </div>
+
+                <div class="setting">
+                    <label for="notificationUrl">通知クリック時のURL:</label>
+                    <input type="url" id="notificationUrl" value="https://www.google.com/" placeholder="URLを入力">
+                </div>
+                
+                <div class="setting" style="margin-top: 15px;">
+                    <label>通知クリック時の動作 (デフォルト: Google):</label><br>
+                    <input type="radio" id="openTab" name="openAction" value="tab" checked> 
+                    <label for="openTab">新しいタブで開く</label><br>
+                    
+                    <input type="radio" id="openWindow" name="openAction" value="window"> 
+                    <label for="openWindow">新しいウィンドウで開く</label>
+                </div>
+            </div>
+            
+            <div id="statusDisplay">
+                監視停止中です
+            </div>
+        </div>
+        
+        <div id="right-column">
+            <div id="visual-monitoring-container">
+                <video id="webcamVideo" width="640" height="480" autoplay muted></video>
+                
+                <canvas id="processingCanvas" width="640" height="480"></canvas>
+                
+                <div id="chartContainer">
+                    <h2>リアルタイム変化レベル</h2>
+                    <canvas id="changeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="main.js"></script>
+
+    <script>
+        const hamburger = document.getElementById('hamburgerMenu');
+        const sidebar = document.getElementById('sidebar');
+
+        hamburger.addEventListener('click', () => {
+            sidebar.classList.toggle('active'); // クラスを付け外しして表示切り替え
+            hamburger.classList.toggle('open'); // ハンバーガーボタンのアニメーション用
+        });
+    </script>
+</body>
+</html>
+
