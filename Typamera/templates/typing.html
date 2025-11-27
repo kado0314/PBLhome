@@ -5,71 +5,107 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>カメラ・タイピングゲーム</title>
     
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="typing.css">
 </head>
-<body>
-    <div class="hamburger-menu" id="hamburgerMenu">
-        <span></span>
-        <span></span>
-        <span></span>
+<body class="bg-gray-900 text-white min-h-screen relative overflow-x-hidden">
+
+    <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-600 rounded-full blur-[100px] opacity-20 -z-10 pointer-events-none"></div>
+
+    <div class="hamburger-menu fixed top-5 left-5 w-9 h-8 cursor-pointer z-[5000] flex flex-col justify-between" id="hamburgerMenu">
+        <span class="block w-full h-1 bg-white rounded transition-all duration-300"></span>
+        <span class="block w-full h-1 bg-white rounded transition-all duration-300"></span>
+        <span class="block w-full h-1 bg-white rounded transition-all duration-300"></span>
     </div>
 
-    <nav class="sidebar" id="sidebar">
+    <nav class="sidebar fixed top-0 left-0 w-64 h-full z-[4000] pt-20 -translate-x-full" id="sidebar">
         <ul>
             <li>
-                <a href="https://camerapp.onrender.com">
-                    <img src="../../static/image/homeaikon.png" alt="ホーム">
-                    <span>ホーム</span>
+                <a href="/" class="flex items-center px-6 py-4 text-lg hover:bg-white/10 transition-colors border-b border-white/10">
+                    <div style="width:40px; text-align:center;"><i class="fa-solid fa-house fa-lg"></i></div>
+                    <span class="ml-2 font-bold">ホーム</span>
                 </a>
             </li>
             <li>
-                <a href="https://kado0314.github.io/sorosoroumakuzikkousitekureyo/">
-                    <img src="../../static/image/kansikameraaikon.png" alt="プライバシーガード">
-                    <span>プライバシー<br>ガード</span>
+                <a href="/scoring/saiten" class="flex items-center px-6 py-4 text-lg hover:bg-white/10 transition-colors border-b border-white/10">
+                    <div style="width:40px; text-align:center;"><i class="fa-solid fa-shirt fa-lg text-pink-500"></i></div>
+                    <span class="ml-2 font-bold">ファッション採点</span>
                 </a>
             </li>
             <li>
-                <a href="https://camerapp.onrender.com/scoring/">
-                    <img src="../../static/image/fassyonaikon.png" alt="ファッション採点">
-                    <span>ファッション採点</span>
+                <a href="/Typamera/templates/typing.html" class="flex items-center px-6 py-4 text-lg hover:bg-white/10 transition-colors border-b border-white/10">
+                    <div style="width:40px; text-align:center;"><i class="fa-solid fa-keyboard fa-lg text-amber-400"></i></div>
+                    <span class="ml-2 font-bold">タイピング</span>
+                </a>
+            </li>
+            <li>
+                <a href="/Privacy/index.html" class="flex items-center px-6 py-4 text-lg hover:bg-white/10 transition-colors border-b border-white/10">
+                    <div style="width:40px; text-align:center;"><i class="fa-solid fa-video fa-lg text-indigo-500"></i></div>
+                    <span class="ml-2 font-bold">プライバシーガード</span>
                 </a>
             </li>
         </ul>
     </nav>
-    <div class="container">
-        <h1>カメラ・タイピングチャレンジ</h1>
-        <p>カメラに映っている物をタイピングしましょう！ (英語入力)</p>
 
-        <div class="button-area">
-            <button id="startButton">ゲームスタート</button>
-            <button id="detailsButton">お題リスト詳細</button> </div>
-        <p id="status">準備中...</p>
+    <div class="container mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-screen">
+        
+        <h1 class="text-4xl md:text-5xl font-extrabold mb-2 text-amber-400 drop-shadow-lg">
+            <i class="fa-solid fa-keyboard mr-3"></i>Typing Challenge
+        </h1>
+        <p class="text-gray-400 mb-8 font-light">カメラに映っている物を英語でタイピング！</p>
 
-        <div class="video-container">
-            <video id="webcam" autoplay muted playsinline></video>
-            <canvas id="gameCanvas" style="display: none;"></canvas>
-        </div>
-
-        <div class="game-info">
-            <div id="target-display">
-                <h2>お題: <span id="target-word">---</span></h2>
+        <div class="w-full max-w-3xl bg-gray-800/60 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl">
+            
+            <div class="button-area flex justify-center gap-4 mb-6">
+                <button id="startButton" class="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-play mr-2"></i>ゲームスタート
+                </button>
+                <button id="detailsButton" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-list mr-2"></i>お題リスト
+                </button>
             </div>
-            <div id="typing-area">
-                <input type="text" id="typing-input" placeholder="ここにタイピングしてください" disabled oncontextmenu="return false">
-                <p id="feedback"></p>
+            
+            <p id="status" class="text-center text-blue-400 font-bold h-6 mb-4">準備中...</p>
+
+            <div class="video-container mb-6 relative group">
+                <video id="webcam" autoplay muted playsinline class="w-full h-auto rounded-lg"></video>
+                <canvas id="gameCanvas" style="display: none;"></canvas>
             </div>
-            <p>スコア: <span id="score">0</span></p>
-            <p>残り時間: <span id="timer">60</span>秒</p>
+
+            <div class="game-info bg-gray-900/50 rounded-xl p-6 border border-white/5">
+                <div id="target-display" class="text-center mb-6">
+                    <p class="text-sm text-gray-400 uppercase tracking-widest mb-1">Target Word</p>
+                    <h2 class="text-4xl md:text-5xl font-black text-white tracking-wider">
+                        <span id="target-word" class="text-pink-500">---</span>
+                    </h2>
+                </div>
+                
+                <div id="typing-area" class="text-center mb-6">
+                    <input type="text" id="typing-input" placeholder="ここに入力..." disabled 
+                           class="w-full max-w-md bg-gray-800 border-2 border-gray-600 text-white text-2xl text-center py-3 px-4 rounded-lg focus:border-amber-500 focus:outline-none transition-colors placeholder-gray-600"
+                           autocomplete="off" oncontextmenu="return false">
+                    <p id="feedback" class="mt-2 text-lg font-bold min-h-[1.5em] text-amber-400"></p>
+                </div>
+                
+                <div class="flex justify-around text-xl font-bold border-t border-white/10 pt-4">
+                    <p>SCORE: <span id="score" class="text-green-400 text-2xl">0</span></p>
+                    <p>TIME: <span id="timer" class="text-red-400 text-2xl">60</span></p>
+                </div>
+            </div>
         </div>
     </div>
 
     <div id="detailsModal" class="modal">
         <div class="modal-content">
             <span class="closeButton">&times;</span>
-            <h2>検出可能なお題リスト (全90種)</h2>
-            <input type="text" id="searchInput" placeholder="キーワードで検索（例: cat, dog, apple）" oninput="filterClassList()">
-            <div id="classListContainer">
-            </div>
+            <h2 class="text-2xl font-bold mb-4 text-amber-400"><i class="fa-solid fa-robot mr-2"></i>検出可能なお題 (全90種)</h2>
+            
+            <input type="text" id="searchInput" placeholder="キーワード検索 (例: cat, 時計)" oninput="filterClassList()"
+                   class="w-full bg-gray-900 border border-gray-600 text-white p-3 rounded-lg mb-4 focus:border-amber-500 focus:outline-none">
+            
+            <div id="classListContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                </div>
         </div>
     </div>
     
@@ -77,15 +113,5 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
     
     <script src="../script.js"></script>
-
-    <script>
-        const hamburger = document.getElementById('hamburgerMenu');
-        const sidebar = document.getElementById('sidebar');
-
-        hamburger.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
-            hamburger.classList.toggle('open');
-        });
-    </script>
 </body>
 </html>
