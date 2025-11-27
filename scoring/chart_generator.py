@@ -1,5 +1,5 @@
 import matplotlib
-matplotlib.use('Agg') # サーバー用設定
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib import font_manager
 import numpy as np
@@ -13,7 +13,7 @@ plt.style.use('dark_background')
 
 def generate_radar_chart(aspect_scores):
     """
-    ファッション採点結果をレーダーチャートとして描画（点数表示付き）
+    ファッション採点結果をレーダーチャートとして描画
     """
     # --- フォント設定 ---
     try:
@@ -31,8 +31,8 @@ def generate_radar_chart(aspect_scores):
 
     # --- データ準備 ---
     labels = []
-    values = []     # グラフ描画用（正規化された値）
-    raw_values = [] # テキスト表示用（実際の素点）
+    values = []     # グラフ描画用（0-20に正規化）
+    raw_values = [] # テキスト表示用（素点）
     
     label_map = {
         'color_harmony': '色の調和',
@@ -48,27 +48,31 @@ def generate_radar_chart(aspect_scores):
     for key, score in aspect_scores.items():
         labels.append(label_map.get(key, key))
         
-        # 素点を保存
+        # 満点の設定を取得（デフォルト10）
+        max_score = SCORE_WEIGHTS.get(key, 10.0)
+        if max_score == 0: max_score = 10.0
+
+        # ▼▼▼ 安全対策: AIが満点以上の数値を出したら満点に丸める ▼▼▼
+        if score > max_score:
+            score = max_score
+        
         raw_values.append(score)
 
-        # グラフ用に20点満点スケールに正規化
-        max_score = SCORE_WEIGHTS.get(key, 10.0)
-        if max_score == 0: max_score = 10.0 # ゼロ除算防止
+        # グラフ用に20点満点スケールに換算 (例: 15点満点で15点なら、グラフ上は20の位置)
         normalized_score = (score / max_score) * 20
         values.append(normalized_score)
 
-    # 閉じた多角形にする（描画用データのみ）
+    # 閉じた多角形にする
     values_closed = values + [values[0]]
     angles = np.linspace(0, 2 * np.pi, len(labels), endpoint=False).tolist()
     angles_closed = angles + [angles[0]]
 
     # --- 描画 ---
-    # 図全体の設定
     fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
-    fig.patch.set_facecolor('none') # 背景透明
-    ax.set_facecolor('none')        # グラフ内背景透明
+    fig.patch.set_facecolor('none')
+    ax.set_facecolor('none')
 
-    # プロット（線と塗りつぶし）
+    # プロット
     ax.plot(angles_closed, values_closed, color='#ec4899', linewidth=2, linestyle='solid')
     ax.fill(angles_closed, values_closed, color='#ec4899', alpha=0.3)
 
@@ -76,18 +80,17 @@ def generate_radar_chart(aspect_scores):
     ax.set_xticks(angles)
     ax.set_xticklabels(labels, fontsize=11, color='white')
     
-    # Y軸（グリッド）の設定
-    ax.set_yticklabels([]) # 目盛り数値は消す
+    # グリッド設定
+    ax.set_yticklabels([])
     ax.set_yticks([5, 10, 15, 20])
-    ax.set_ylim(0, 23) # 点数表示のために少し余白を広げる
+    ax.set_ylim(0, 22) # 表示範囲を少し余裕を持たせる
     ax.grid(color='gray', linestyle=':', linewidth=0.8, alpha=0.5)
     ax.spines['polar'].set_color('gray')
 
-    # ▼▼▼ 点数の表示（ここを追加） ▼▼▼
-    # 実際の点数(raw_values)を表示し、位置は正規化された値(values)に基づく
+    # ▼▼▼ 点数表示の修正箇所 ▼▼▼
     for angle, val, raw_val in zip(angles, values, raw_values):
-        # val + 2.5 の位置に表示（ドットの少し外側）
-        ax.text(angle, val + 3.0, f"{raw_val}", 
+        # 修正: 距離を +3.0 から +1.2 に変更し、点のすぐそばに表示させる
+        ax.text(angle, val + 1.2, f"{raw_val}", 
                 color='white', ha='center', va='center', 
                 fontsize=10, fontweight='bold')
 
