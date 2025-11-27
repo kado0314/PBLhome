@@ -1,3 +1,5 @@
+// Typamera/script.js
+
 // --- DOM要素の取得 ---
 const webcam = document.getElementById('webcam');
 const statusElement = document.getElementById('status');
@@ -8,7 +10,7 @@ const timerElement = document.getElementById('timer');
 const feedbackElement = document.getElementById('feedback');
 const startButton = document.getElementById('startButton');
 
-// ▼▼▼ モーダル用DOM要素を追加 ▼▼▼
+// モーダル用DOM要素
 const detailsButton = document.getElementById('detailsButton');
 const detailsModal = document.getElementById('detailsModal');
 const closeButton = document.getElementsByClassName('closeButton')[0];
@@ -47,42 +49,36 @@ const COCO_CLASSES = {
     'hair drier': 'ドライヤー', 'toothbrush': '歯ブラシ'
 };
 
-// 許可リストを対応表の全キー（英語名）から自動生成
 const ALLOWED_CLASSES = Object.keys(COCO_CLASSES);
 
 // --- 1. 初期化とモデルロード ---
-
-// カメラを停止する
 function stopCamera() {
     if (stream) {
         stream.getTracks().forEach(track => track.stop());
         stream = null;
         webcam.srcObject = null;
     }
+    // Tailwindではhiddenクラスで制御しても良いが、ここはdisplayプロパティで
     webcam.style.display = 'none';
 }
 
-// カメラとモデルを初期化（非同期）
 async function initializeApp() {
     statusElement.textContent = 'カメラを起動し、モデルをロード中です...';
     startButton.disabled = true;
     detailsButton.disabled = true;
 
     try {
-        // カメラの起動
         stream = await navigator.mediaDevices.getUserMedia({ video: true });
         webcam.srcObject = stream;
         await new Promise(resolve => webcam.onloadedmetadata = resolve);
 
-        // モデルのロード
         model = await cocoSsd.load();
         
         statusElement.textContent = '準備完了！「ゲームスタート」を押してください。';
         startButton.disabled = false;
-        detailsButton.disabled = false; // 詳細ボタンを有効化
+        detailsButton.disabled = false;
         webcam.style.display = 'block'; 
         
-        // モーダルのリストを作成
         populateClassList();
         
     } catch (error) {
@@ -92,8 +88,6 @@ async function initializeApp() {
 }
 
 // --- 2. ゲームのリセットと開始 ---
-
-// resetGame() をリプレイ可能なように修正
 function resetGame() {
     clearInterval(gameInterval);
     clearInterval(detectionInterval);
@@ -113,22 +107,20 @@ function resetGame() {
     
     startButton.textContent = 'ゲームスタート';
     startButton.disabled = false;
-    detailsButton.disabled = false; // 詳細ボタンを再有効化
+    detailsButton.disabled = false;
 }
 
 function startGame() {
     if (isGameRunning || !model) return;
     isGameRunning = true;
     
-    // UIの更新
-    startButton.textContent = 'ゲーム実行中...';
+    startButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>ゲーム実行中...';
     startButton.disabled = true;
-    detailsButton.disabled = true; // ゲーム中は詳細を見れないように
+    detailsButton.disabled = true;
     typingInput.disabled = false;
     typingInput.focus();
     webcam.style.display = 'block';
 
-    // ゲームタイマー開始
     gameInterval = setInterval(() => {
         time--;
         timerElement.textContent = time;
@@ -137,9 +129,8 @@ function startGame() {
         }
     }, 1000);
     
-    // 物体検出を3秒ごとに行う
     detectionInterval = setInterval(detectObjects, 3000);
-    detectObjects(true); // 即座に最初の検出とお題を設定
+    detectObjects(true);
     statusElement.textContent = 'ゲーム開始！カメラに映るものを入力してください。';
 }
 
@@ -149,7 +140,6 @@ async function detectObjects(forceNewWord = false) {
 
     const predictions = await model.detect(webcam);
     
-    // 許可されたクラスのみを抽出 (ALLOWED_CLASSES は全リストになった)
     const detectedClasses = predictions
         .filter(p => p.score > 0.6 && ALLOWED_CLASSES.includes(p.class))
         .map(p => p.class);
@@ -178,31 +168,40 @@ function setNewTargetWord(detectedClasses) {
         
         targetWord = newWord;
         targetWordElement.textContent = targetWord;
-        feedbackElement.textContent = '新しいお題です！「' + targetWord + '」';
+        feedbackElement.textContent = 'New Target!';
+        
+        // アニメーション用クラスの付け外し
+        targetWordElement.classList.remove('text-pink-500');
+        void targetWordElement.offsetWidth; // リフロー発生
+        targetWordElement.classList.add('text-pink-500');
+
         typingInput.value = '';
         typingInput.focus();
     }
 }
 
-// --- 5. タイピング処理とコピペ禁止 ---
+// --- 5. タイピング処理 ---
 typingInput.addEventListener('input', () => {
-    // (省略: このセクションは変更ありません)
     if (targetWord === '---' || !isGameRunning) return;
-    const typedText = typingInput.value;
+    const typedText = typingInput.value.toLowerCase().trim(); // 空白削除と小文字化
+    
     if (typedText === targetWord) {
         score++;
         scoreElement.textContent = score;
-        feedbackElement.textContent = `⭕ 正解！「${targetWord}」`;
+        feedbackElement.textContent = `⭕ Excellent!`;
+        feedbackElement.className = "mt-2 text-lg font-bold min-h-[1.5em] text-green-400";
+        
         isTargetLocked = false;
         detectObjects(true);
     } else if (targetWord.startsWith(typedText)) {
-        feedbackElement.textContent = 'タイピング中...';
+        feedbackElement.textContent = 'Typing...';
+        feedbackElement.className = "mt-2 text-lg font-bold min-h-[1.5em] text-blue-400";
     } else {
-        feedbackElement.textContent = '❌ ミス！打ち直してください。';
+        feedbackElement.textContent = '❌ Miss!';
+        feedbackElement.className = "mt-2 text-lg font-bold min-h-[1.5em] text-red-400";
     }
 });
 
-// (省略: コピペ防止リスナーも変更ありません)
 typingInput.addEventListener('paste', (e) => e.preventDefault());
 typingInput.addEventListener('copy', (e) => e.preventDefault());
 typingInput.addEventListener('cut', (e) => e.preventDefault());
@@ -212,34 +211,22 @@ typingInput.addEventListener('keydown', (e) => {
     }
 });
 
-
 // --- 6. ゲーム終了 ---
-
-// endGame() をリプレイ可能なように修正
 function endGame() {
-    // stopCamera() を削除！カメラは起動したままにする
-    statusElement.textContent = `ゲーム終了！スコア: ${score}点でした。「スタート」で再挑戦できます。`;
+    statusElement.textContent = `Finish! Score: ${score}`;
     alert(`ゲーム終了！あなたのスコアは ${score}点です。`);
-    
-    // resetGame() を呼び出してUIを初期状態に戻す
     resetGame();
 }
 
 // --- 7. イベントリスナー ---
 startButton.addEventListener('click', startGame);
-
-// ページを離れる際にカメラを停止
 window.addEventListener('beforeunload', stopCamera);
 
-
-// --- 8. ▼▼▼ モーダル処理 ▼▼▼ ---
-
-// リストを生成してコンテナに挿入
+// --- 8. モーダル処理 ---
 function populateClassList() {
     let htmlContent = '';
-    // COCO_CLASSESオブジェクトをループ処理
     for (const [english, japanese] of Object.entries(COCO_CLASSES)) {
-        htmlContent += `<p><strong>${english}</strong>: ${japanese}</p>`;
+        htmlContent += `<p class="bg-white/5 p-2 rounded border-l-4 border-amber-500"><strong class="text-amber-300">${english}</strong>: ${japanese}</p>`;
     }
     classListContainer.innerHTML = htmlContent;
 }
@@ -249,29 +236,35 @@ function filterClassList() {
     const items = document.querySelectorAll("#classListContainer p");
 
     items.forEach(item => {
-        const text = item.textContent.toLowerCase(); // "apple: リンゴ" の形
-
-        // 検索ワードが英語 or 日本語のどちらでも一致するように
+        const text = item.textContent.toLowerCase();
         item.style.display = text.includes(input) ? "block" : "none";
     });
 }
 
-// 「詳細」ボタンがクリックされたらモーダルを表示
 detailsButton.addEventListener('click', () => {
     detailsModal.style.display = 'block';
 });
 
-// 「×」ボタンがクリックされたらモーダルを非表示
 closeButton.addEventListener('click', () => {
     detailsModal.style.display = 'none';
 });
 
-// モーダルの外側（背景）がクリックされたらモーダルを非表示
 window.addEventListener('click', (event) => {
     if (event.target == detailsModal) {
         detailsModal.style.display = 'none';
     }
 });
 
-// アプリケーションの開始
+
+// ▼▼▼ ハンバーガーメニュー制御 (Tailwind対応) ▼▼▼
+const hamburger = document.getElementById('hamburgerMenu');
+const sidebar = document.getElementById('sidebar');
+
+hamburger.addEventListener('click', () => {
+    // Tailwindの -translate-x-full クラスをトグルすることで出し入れ
+    sidebar.classList.toggle('-translate-x-full');
+    hamburger.classList.toggle('open');
+});
+
+// 初期化
 initializeApp();
