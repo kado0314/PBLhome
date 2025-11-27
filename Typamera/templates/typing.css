@@ -1,321 +1,132 @@
-/* static/css/typing.css */
+/* Typamera/templates/typing.css */
 
-/* =========================================
-   ▼▼▼ ベーススタイル & ゲームレイアウト ▼▼▼
-   ========================================= */
+/* Google Fonts Import */
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;500;800&family=Noto+Sans+JP:wght@300;500;700&display=swap');
+
 body {
-    font-family: sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    margin: 0;
-    background-color: #f4f4f9;
-    color: #333;
+    font-family: 'Lexend', 'Noto Sans JP', sans-serif;
+    /* 背景はHTML側のTailwindクラスで設定しますが、念のため */
+    background-color: #111827; 
+    color: #ffffff;
 }
 
-.container {
-    background-color: #fff;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    max-width: 600px;
-    width: 90%;
-}
-
-h1 {
-    color: #4CAF50;
-    margin-bottom: 5px;
-}
-
-p#status {
-    font-size: 1.1em;
-    font-weight: bold;
-    color: #007bff;
-    margin: 15px 0;
-}
-
+/* ビデオコンテナ（装飾） */
 .video-container {
     position: relative;
-    margin: 20px auto;
     width: 100%;
-    max-width: 480px;
+    max-width: 640px;
+    margin: 0 auto;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.1);
 }
 
 #webcam {
     width: 100%;
     height: auto;
-    border: 3px solid #ccc;
-    border-radius: 8px;
-    display: none;
+    display: block;
+    transform: scaleX(-1); /* 鏡のように反転 */
 }
 
-/* ▼▼▼ ボタンエリア ▼▼▼ */
-.button-area {
-    display: flex;
-    justify-content: center;
-    gap: 15px; /* ボタン間の隙間 */
-    margin-bottom: 20px;
+/* タイピング入力エリアの強調 */
+#typing-input:disabled {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #9ca3af;
+    border-color: transparent;
 }
 
-#startButton, #detailsButton {
-    padding: 10px 20px;
-    font-size: 1.1em;
-    font-weight: bold;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-#startButton {
-    background-color: #007bff;
-}
-#detailsButton {
-    background-color: #6c757d; /* 詳細ボタンの色 */
-}
-
-#startButton:hover:not(:disabled) {
-    background-color: #0056b3;
-}
-#detailsButton:hover:not(:disabled) {
-    background-color: #5a6268;
-}
-
-#startButton:disabled, #detailsButton:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-}
-
-/* ▼▼▼ ゲーム情報エリア ▼▼▼ */
-.game-info {
-    margin-top: 20px;
-    padding: 20px;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    background-color: #fafafa;
-}
-
+/* お題の文字アニメーション */
 #target-word {
-    color: #E91E63;
-    font-size: 1.8em;
-    font-weight: bolder;
-    letter-spacing: 1px;
+    text-shadow: 0 0 15px rgba(236, 72, 153, 0.8); /* Pink glow */
+    transition: transform 0.2s;
+    display: inline-block;
 }
 
-#typing-input {
-    width: 80%;
-    padding: 10px;
-    font-size: 1.2em;
-    text-align: center;
-    border: 2px solid #ccc;
-    border-radius: 5px;
-    margin: 10px 0;
-    transition: border-color 0.3s;
-}
-
-#typing-input:focus {
-    border-color: #4CAF50;
-    outline: none;
-}
-
-#feedback {
-    min-height: 1.5em;
-    color: #FF9800;
-    font-weight: bold;
-}
-
-.game-info p {
-    margin: 5px 0;
-    font-size: 1.1em;
-}
-
-#score, #timer {
-    font-weight: bold;
-    color: #4CAF50;
-}
-
-/* =========================================
-   ▼▼▼ モーダルウィンドウ (詳細リスト) ▼▼▼
-   ========================================= */
+/* === モーダル（ダークモード対応） === */
 .modal {
-    display: none; /* 初期状態は非表示 */
-    position: fixed; /* 画面に固定 */
-    z-index: 1000;
+    display: none;
+    position: fixed;
+    z-index: 4000;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: auto; /* スクロール可能に */
-    background-color: rgba(0, 0, 0, 0.5); /* 半透明の黒い背景 */
-    padding-top: 60px; /* 上部に余白 */
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.8); /* 背景を暗く */
+    backdrop-filter: blur(5px);
 }
 
 .modal-content {
-    background-color: #fefefe;
-    margin: 5% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 500px;
-    border-radius: 10px;
-    position: relative;
-    text-align: left;
-    box-sizing: border-box;
+    background-color: #1f2937; /* gray-800 */
+    margin: 10% auto;
+    padding: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 90%;
+    max-width: 600px;
+    border-radius: 1rem;
+    color: white;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
+/* 閉じるボタン */
 .closeButton {
-    color: #aaa;
+    color: #9ca3af;
     float: right;
-    font-size: 28px;
+    font-size: 2rem;
     font-weight: bold;
-    position: absolute;
-    top: 10px;
-    right: 20px;
-}
-
-.closeButton:hover,
-.closeButton:focus {
-    color: black;
-    text-decoration: none;
+    line-height: 1;
     cursor: pointer;
+    transition: color 0.2s;
 }
 
+.closeButton:hover {
+    color: #ec4899; /* Pink hover */
+}
+
+/* リストコンテナ */
 #classListContainer {
-    max-height: 60vh;
+    max-height: 50vh;
     overflow-y: auto;
-    padding-right: 15px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    margin-top: 1rem;
+}
+
+/* スクロールバーのカスタマイズ */
+#classListContainer::-webkit-scrollbar {
+    width: 8px;
+}
+#classListContainer::-webkit-scrollbar-track {
+    background: #111827; 
+}
+#classListContainer::-webkit-scrollbar-thumb {
+    background: #4b5563; 
+    border-radius: 4px;
 }
 
 #classListContainer p {
-    margin: 4px 0;
-    padding: 5px;
-    background-color: #f9f9f9;
-    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 0.5rem;
+    border-left: 3px solid #fbbf24; /* Amber accent */
 }
 
-#searchInput {
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  padding: 10px;
-  margin: 0 auto 12px auto;
-  border: 2px solid #ccc;
-  border-radius: 6px;
-  font-size: 1em;
-  transition: border-color 0.2s;
-  box-sizing: border-box;
-}
-
-#searchInput:focus {
-  border-color: #4CAF50;
-  outline: none;
-}
-
-/* =========================================
-   ▼▼▼ ハンバーガーメニュー & サイドバー ▼▼▼
-   ========================================= */
-
-/* ハンバーガーボタン（三本線） */
-.hamburger-menu {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    width: 35px;
-    height: 30px;
-    cursor: pointer;
-    z-index: 3000; /* モーダル(1000)より手前に */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.hamburger-menu span {
-    display: block;
-    width: 100%;
-    height: 4px;
-    background-color: #2c3e50; /* 線の色は濃い色 */
-    border-radius: 4px;
-    transition: all 0.3s ease;
-}
-
-/* メニューが開いたときのアニメーション（×印にする） */
-.hamburger-menu.open span:nth-child(1) {
-    transform: translateY(13px) rotate(45deg);
-}
-.hamburger-menu.open span:nth-child(2) {
-    opacity: 0;
-}
-.hamburger-menu.open span:nth-child(3) {
-    transform: translateY(-13px) rotate(-45deg);
-}
-
-/* サイドバー（メニュー本体） */
+/* サイドバーのスタイル（fashion.cssと共通化） */
 .sidebar {
-    position: fixed;
-    top: 0;
-    left: -300px; /* 最初は画面外に隠す */
-    width: 250px;
-    height: 100%;
-    
-    /* ▼▼▼ 背景を白く明るく設定 ▼▼▼ */
-    background-color: #ffffff; 
-    
-    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-    transition: left 0.3s ease;
-    z-index: 2500; /* モーダルより手前に */
-    padding-top: 70px; /* ハンバーガーボタンの下から開始 */
-    text-align: left; /* コンテナの中央揃えをリセット */
-}
-
-/* activeクラスがつくと画面内に出てくる */
-.sidebar.active {
-    left: 0;
-}
-
-.sidebar ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.sidebar li {
-    width: 100%;
+    background-color: rgba(17, 24, 39, 0.95); /* gray-900 */
+    backdrop-filter: blur(10px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.3s ease-in-out;
 }
 
 .sidebar a {
-    display: flex;
-    align-items: center;
-    padding: 15px 20px;
-    text-decoration: none;
-    
-    /* ▼▼▼ 文字色は濃いグレー ▼▼▼ */
-    color: #333333; 
-    border-bottom: 1px solid #f0f0f0;
-    
-    font-size: 1.1em;
-    transition: background 0.2s;
+    color: white;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
-
-/* ホバー時は薄い水色 */
 .sidebar a:hover {
-    background-color: #e6f7ff; 
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* アイコン画像のスタイル（丸く切り抜く） */
-.sidebar img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%; /* 完全な円 */
-    object-fit: cover;
-    margin-right: 15px; /* 文字との間隔 */
-    
-    /* ▼▼▼ 枠線を目立つ薄グレーに ▼▼▼ */
-    border: 1px solid #ccc;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.hamburger-menu span {
+    background-color: white;
 }
