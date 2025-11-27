@@ -35,7 +35,7 @@ class FashionScorer:
                 print(f"Model initialization error: {e}")
 
     def load_image(self, image_base64: str) -> bytes | None:
-        """Base64文字列からJPEGバイト列に変換して返す"""
+        """Base64文字列からPNGに変換して返す"""
         try:
             img_bytes = base64.b64decode(image_base64)
             image = Image.open(io.BytesIO(img_bytes))
