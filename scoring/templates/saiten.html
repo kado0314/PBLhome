@@ -5,46 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ファッション採点</title>
     
+    <link rel="icon" href="https://github.com/kado0314/PBLcamera/blob/main/static/image/huku.png?raw=true" type="image/png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="stylesheet" href="{{ url_for('scoring.static', filename='css/fashion.css') }}">
-    
-    <link rel="icon" href="https://github.com/kado0314/PBLcamera/blob/main/static/image/huku.png?raw=true" type="image/png">
 </head>
-<body>
+<body class="bg-gray-900 text-white min-h-screen relative overflow-x-hidden font-sans">
     
     <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-pink-600 rounded-full blur-[100px] opacity-20 -z-10 pointer-events-none"></div>
 
-    <div class="hamburger-menu" id="hamburgerMenu">
-        <span></span>
-        <span></span>
-        <span></span>
+    <div class="hamburger-menu fixed top-5 left-5 w-9 h-8 cursor-pointer z-[5000] flex flex-col justify-between" id="hamburgerMenu">
+        <span class="block w-full h-1 bg-white rounded transition-all duration-300"></span>
+        <span class="block w-full h-1 bg-white rounded transition-all duration-300"></span>
+        <span class="block w-full h-1 bg-white rounded transition-all duration-300"></span>
     </div>
 
-    <nav class="sidebar" id="sidebar">
+    <nav class="sidebar fixed top-0 left-0 w-64 h-full bg-gray-900/95 backdrop-blur-md border-r border-white/10 z-[4000] pt-20 -translate-x-full transition-transform duration-300" id="sidebar">
         <ul>
             <li>
-                <a href="/">
+                <a href="/" class="flex items-center px-6 py-4 text-lg text-white hover:bg-white/10 transition-colors border-b border-white/10">
                     <div style="width:40px; text-align:center;"><i class="fa-solid fa-house fa-lg"></i></div>
                     <span class="ml-2 font-bold">ホーム</span>
                 </a>
             </li>
             <li>
-                <a href="/scoring/saiten">
+                <a href="/scoring/saiten" class="flex items-center px-6 py-4 text-lg text-white hover:bg-white/10 transition-colors border-b border-white/10">
                     <div style="width:40px; text-align:center;"><i class="fa-solid fa-shirt fa-lg text-pink-500"></i></div>
                     <span class="ml-2 font-bold">ファッション採点</span>
                 </a>
             </li>
             <li>
-                <a href="/Typamera/templates/typing.html">
+                <a href="/Typamera/templates/typing.html" class="flex items-center px-6 py-4 text-lg text-white hover:bg-white/10 transition-colors border-b border-white/10">
                     <div style="width:40px; text-align:center;"><i class="fa-solid fa-keyboard fa-lg text-amber-400"></i></div>
                     <span class="ml-2 font-bold">タイピング</span>
                 </a>
             </li>
             <li>
-                <a href="/Privacy/index.html">
+                <a href="/Privacy/index.html" class="flex items-center px-6 py-4 text-lg text-white hover:bg-white/10 transition-colors border-b border-white/10">
                     <div style="width:40px; text-align:center;"><i class="fa-solid fa-video fa-lg text-indigo-500"></i></div>
                     <span class="ml-2 font-bold">プライバシーガード</span>
                 </a>
@@ -52,90 +52,96 @@
         </ul>
     </nav>
 
-    <h1><i class="fa-solid fa-shirt text-pink-500 mr-3"></i>ファッション採点</h1>
-    
-    <form method="POST" enctype="multipart/form-data" action="{{ url_for('scoring.saiten') }}">
+    <div class="container mx-auto px-4 py-8 max-w-2xl flex flex-col items-center">
         
-        <label><i class="fa-regular fa-image mr-2"></i>画像をアップロード</label>
-        <input type="file" name="image_file" accept="image/*" capture="camera" id="imageInput">
+        <h1 class="text-3xl md:text-4xl font-extrabold mt-10 mb-8 text-pink-400 drop-shadow-lg text-center">
+            <i class="fa-solid fa-shirt mr-3"></i>ファッション採点
+        </h1>
         
-        <div class="flex gap-2 mt-4">
-            <button type="button" id="openCameraBtn"><i class="fa-solid fa-camera mr-2"></i>カメラ起動</button>
-        </div>
-        
-        <div id="cameraArea" class="mt-4 hidden">
-            <video id="cameraVideo" autoplay playsinline class="w-full rounded-lg border border-gray-600 mb-2"></video>
-            <button type="button" id="takePhotoBtn"><i class="fa-solid fa-circle-dot mr-2"></i>撮影</button>
-        </div>
-        
-        <img id="imagePreview" src="" class="mt-4 w-full rounded-lg hidden">
-
-        <div class="grid grid-cols-2 gap-4 mt-6">
-            <div>
-                <label for="user_gender">性別</label>
-                <select name="user_gender" id="user_gender">
-                    <option value="neutral" {% if selected_gender == 'neutral' %}selected{% endif %}>指定なし</option>
-                    <option value="male" {% if selected_gender == 'male' %}selected{% endif %}>男性</option>
-                    <option value="female" {% if selected_gender == 'female' %}selected{% endif %}>女性</option>
-                </select>
-            </div>
-            <div>
-                <label for="intended_scene">シーン (TPO)</label>
-                <select name="intended_scene" id="intended_scene">
-                    <option value="date" {% if selected_scene == 'date' %}selected{% endif %}>デート</option>
-                    <option value="work" {% if selected_scene == 'work' %}selected{% endif %}>仕事</option>
-                    <option value="friends" {% if selected_scene == 'friends' %}selected{% endif %}>友達と遊ぶ</option>
-                </select>
-            </div>
-        </div>
-
-        <button type="submit" class="mt-8 text-lg py-4 shadow-lg hover:shadow-pink-500/50 transition-all">
-            採点スタート
-        </button>
-    </form>
-
-    {% if uploaded_image_data %}
-    <div class="target fade-in">
-        <h3><i class="fa-solid fa-crosshairs mr-2 text-pink-400"></i>採点対象</h3>
-        <img src="{{ uploaded_image_data }}" class="w-full rounded-lg border-2 border-pink-500 shadow-lg">
-    </div>
-    {% endif %}
-
-    {% if score is not none %}
-    <div class="results fade-in">
-        <div class="res-head w-full text-center">
-            <h2 class="text-2xl font-bold mb-4">総合スコア</h2>
-            <span class="score">{{ score }}</span>
-            <p class="text-xl mt-2 font-light">{{ recommendation }}</p>
-        </div>
-        
-        <div class="res-body flex flex-col md:flex-row gap-6 mt-8">
-            <div class="rating flex-1">
-                <h4 class="text-lg font-bold mb-3 text-pink-300">AIからのフィードバック</h4>
-                <ul>
-                    {% for f in feedback %}
-                        <li><i class="fa-solid fa-check mr-2 text-green-400"></i>{{ f }}</li>
-                    {% endfor %}
-                </ul>
+        <form method="POST" enctype="multipart/form-data" action="{{ url_for('scoring.saiten') }}" class="w-full">
+            
+            <label class="block text-gray-300 font-bold mb-2"><i class="fa-regular fa-image mr-2"></i>画像をアップロード</label>
+            <input type="file" name="image_file" accept="image/*" capture="camera" id="imageInput" class="mb-4">
+            
+            <div class="flex gap-2 mb-4">
+                <button type="button" id="openCameraBtn" class="bg-transparent border-2 border-pink-500 text-white hover:bg-pink-500/20"><i class="fa-solid fa-camera mr-2"></i>カメラ起動</button>
             </div>
             
-            {% if radar_chart_data %}
-            <div class="chart flex-1 flex justify-center items-center bg-white/5 rounded-lg p-4">
-                <img src="{{ radar_chart_data }}" alt="レーダーチャート" class="max-w-full h-auto">
+            <div id="cameraArea" class="hidden mb-4">
+                <video id="cameraVideo" autoplay playsinline class="w-full rounded-lg border border-gray-600 mb-2"></video>
+                <button type="button" id="takePhotoBtn" class="bg-transparent border-2 border-pink-500 text-white hover:bg-pink-500/20 w-full"><i class="fa-solid fa-circle-dot mr-2"></i>撮影</button>
             </div>
-            {% endif %}
+            
+            <img id="imagePreview" src="" class="w-full rounded-lg hidden mb-6 border-2 border-gray-600">
+
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label for="user_gender" class="block text-gray-300 text-sm font-bold mb-2">性別</label>
+                    <select name="user_gender" id="user_gender" class="bg-gray-800 border border-gray-600 text-white rounded p-2 w-full focus:border-pink-500 outline-none">
+                        <option value="neutral" {% if selected_gender == 'neutral' %}selected{% endif %}>指定なし</option>
+                        <option value="male" {% if selected_gender == 'male' %}selected{% endif %}>男性</option>
+                        <option value="female" {% if selected_gender == 'female' %}selected{% endif %}>女性</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="intended_scene" class="block text-gray-300 text-sm font-bold mb-2">シーン (TPO)</label>
+                    <select name="intended_scene" id="intended_scene" class="bg-gray-800 border border-gray-600 text-white rounded p-2 w-full focus:border-pink-500 outline-none">
+                        <option value="date" {% if selected_scene == 'date' %}selected{% endif %}>デート</option>
+                        <option value="work" {% if selected_scene == 'work' %}selected{% endif %}>仕事</option>
+                        <option value="friends" {% if selected_scene == 'friends' %}selected{% endif %}>友達と遊ぶ</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full py-4 text-lg shadow-lg hover:shadow-pink-500/50 transition-all rounded-full font-bold">
+                採点スタート
+            </button>
+        </form>
+
+        {% if uploaded_image_data %}
+        <div class="target fade-in w-full mt-8">
+            <h3 class="text-xl font-bold mb-4 text-white"><i class="fa-solid fa-crosshairs mr-2 text-pink-400"></i>採点対象</h3>
+            <img src="{{ uploaded_image_data }}" class="w-full rounded-lg border-2 border-pink-500 shadow-lg">
         </div>
+        {% endif %}
+
+        {% if score is not none %}
+        <div class="results fade-in w-full mt-8">
+            <div class="res-head w-full text-center">
+                <h2 class="text-2xl font-bold mb-4 text-white">総合スコア</h2>
+                <span class="score block text-6xl font-extrabold text-pink-500 my-4 drop-shadow-md">{{ score }}</span>
+                <p class="text-xl mt-2 font-light text-gray-200">{{ recommendation }}</p>
+            </div>
+            
+            <div class="res-body flex flex-col md:flex-row gap-6 mt-8">
+                <div class="rating flex-1">
+                    <h4 class="text-lg font-bold mb-3 text-pink-300">AIからのフィードバック</h4>
+                    <ul class="space-y-2">
+                        {% for f in feedback %}
+                            <li class="bg-white/5 p-3 rounded border-l-4 border-pink-500"><i class="fa-solid fa-check mr-2 text-green-400"></i>{{ f }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                
+                {% if radar_chart_data %}
+                <div class="chart flex-1 flex justify-center items-center bg-white/5 rounded-lg p-4">
+                    <img src="{{ radar_chart_data }}" alt="レーダーチャート" class="max-w-full h-auto">
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
     </div>
-    {% endif %}
     
     <script src="{{ url_for('scoring.static', filename='js/saiten.js') }}"></script>
 
     <script>
+        // ハンバーガーメニュー制御 (Tailwind対応)
         const hamburger = document.getElementById('hamburgerMenu');
         const sidebar = document.getElementById('sidebar');
 
         hamburger.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
+            sidebar.classList.toggle('-translate-x-full'); // 画面外へ隠す/出すを切り替え
             hamburger.classList.toggle('open');
         });
     </script>
