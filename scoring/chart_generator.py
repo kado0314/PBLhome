@@ -2,7 +2,6 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib import font_manager
-import numpy as np
 import io
 import base64
 import os
@@ -13,7 +12,7 @@ plt.style.use('dark_background')
 
 def generate_radar_chart(aspect_scores):
     """
-    ファッション採点結果をレーダーチャートとして描画
+    関数名はそのまま維持しますが、中身は「横棒グラフ（データバー）」を生成します。
     """
     # --- フォント設定 ---
     try:
@@ -31,68 +30,81 @@ def generate_radar_chart(aspect_scores):
 
     # --- データ準備 ---
     labels = []
-    values = []     # グラフ描画用（0-20に正規化）
-    raw_values = [] # テキスト表示用（素点）
+    percentages = [] # グラフの長さ用（0-100%）
+    text_labels = [] # 表示用テキスト（例: "18 / 20"）
     
     label_map = {
         'color_harmony': '色の調和',
         'fit_and_silhouette': 'シルエット',
         'item_coordination': '組み合わせ',
         'cleanliness_material': '清潔感',
-        'accessories_balance': '小物',
+        'accessories_balance': '小物・アクセ',
         'trendness': 'トレンド',
         'tpo_suitability': 'TPO',
         'photogenic_quality': '写真映え'
     }
 
-    for key, score in aspect_scores.items():
-        labels.append(label_map.get(key, key))
+    # 辞書の順序を維持したいので、label_mapのキー順で回す
+    for key, label_text in label_map.items():
+        score = aspect_scores.get(key, 0)
         
-        # 満点の設定を取得（デフォルト10）
+        # 満点を取得
         max_score = SCORE_WEIGHTS.get(key, 10.0)
         if max_score == 0: max_score = 10.0
-
-        # ▼▼▼ 安全対策: AIが満点以上の数値を出したら満点に丸める ▼▼▼
-        if score > max_score:
-            score = max_score
         
-        raw_values.append(score)
+        # キャップ処理
+        if score > max_score: score = max_score
 
-        # グラフ用に20点満点スケールに換算 (例: 15点満点で15点なら、グラフ上は20の位置)
-        normalized_score = (score / max_score) * 20
-        values.append(normalized_score)
+        # グラフの長さ用に100%換算
+        pct = (score / max_score) * 100
+        
+        labels.append(label_text)
+        percentages.append(pct)
+        text_labels.append(f"{int(score)}/{int(max_score)}")
 
-    # 閉じた多角形にする
-    values_closed = values + [values[0]]
-    angles = np.linspace(0, 2 * np.pi, len(labels), endpoint=False).tolist()
-    angles_closed = angles + [angles[0]]
+    # 表示順を逆にする（グラフは下から描画されるため、リストを反転させて上から表示させる）
+    labels = labels[::-1]
+    percentages = percentages[::-1]
+    text_labels = text_labels[::-1]
 
     # --- 描画 ---
-    fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
+    # 横長の比率に設定
+    fig, ax = plt.subplots(figsize=(8, 5))
     fig.patch.set_facecolor('none')
     ax.set_facecolor('none')
 
-    # プロット
-    ax.plot(angles_closed, values_closed, color='#ec4899', linewidth=2, linestyle='solid')
-    ax.fill(angles_closed, values_closed, color='#ec4899', alpha=0.3)
+    # Y軸の位置（項目数分）
+    y_pos = range(len(labels))
 
-    # 軸の設定
-    ax.set_xticks(angles)
-    ax.set_xticklabels(labels, fontsize=11, color='white')
+    # 1. 背景のバー（薄いグレーで満点=100%の長さを描画）
+    ax.barh(y_pos, [100]*len(y_pos), height=0.6, align='center', 
+            color='gray', alpha=0.2, edgecolor='none')
+
+    # 2. スコアのバー（ピンクで実際のスコアを描画）
+    # 角を少し丸く見せるためにlinewidthを太くしたりもできますが、シンプルに描画
+    bars = ax.barh(y_pos, percentages, height=0.6, align='center', 
+                   color='#ec4899', edgecolor='none', alpha=0.9)
+
+    # 3. テキスト表示（バーの右端に「18/20」のような数字を表示）
+    for i, (pct, text) in enumerate(zip(percentages, text_labels)):
+        # バーの少し右側に配置
+        ax.text(102, i, text, va='center', ha='left', 
+                color='white', fontsize=11, fontweight='bold')
+
+    # --- 見た目の調整 ---
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(labels, fontsize=11, color='white')
     
-    # グリッド設定
-    ax.set_yticklabels([])
-    ax.set_yticks([5, 10, 15, 20])
-    ax.set_ylim(0, 22) # 表示範囲を少し余裕を持たせる
-    ax.grid(color='gray', linestyle=':', linewidth=0.8, alpha=0.5)
-    ax.spines['polar'].set_color('gray')
-
-    # ▼▼▼ 点数表示の修正箇所 ▼▼▼
-    for angle, val, raw_val in zip(angles, values, raw_values):
-        # 修正: 距離を +3.0 から +1.2 に変更し、点のすぐそばに表示させる
-        ax.text(angle, val + 1.2, f"{raw_val}", 
-                color='white', ha='center', va='center', 
-                fontsize=10, fontweight='bold')
+    # 不要な枠線や目盛りを消す
+    ax.set_xlim(0, 115) # テキストが入るように右側を空ける
+    ax.set_xticks([])   # 下の目盛り（0, 20, 40...）を消す
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    
+    # 軸のティック（ヒゲ）を消す
+    ax.tick_params(axis='y', length=0)
 
     # 保存
     buf = io.BytesIO()
