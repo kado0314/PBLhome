@@ -11,17 +11,28 @@
 
     <style>
         .hamburger-menu span {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: white;
+            border-radius: 4px;
             transition: all 0.3s ease-in-out;
-            transform-origin: center;
         }
+        .hamburger-menu span:nth-child(1) { top: 0; }
+        .hamburger-menu span:nth-child(2) { top: 50%; transform: translateY(-50%); }
+        .hamburger-menu span:nth-child(3) { bottom: 0; }
+
         .hamburger-menu.open span:nth-child(1) {
-            transform: translateY(10px) rotate(45deg);
+            top: 50%;
+            transform: translateY(-50%) rotate(45deg);
         }
         .hamburger-menu.open span:nth-child(2) {
             opacity: 0;
         }
         .hamburger-menu.open span:nth-child(3) {
-            transform: translateY(-10px) rotate(-45deg);
+            top: 50%;
+            transform: translateY(-50%) rotate(-45deg);
         }
     </style>
 </head>
@@ -35,32 +46,17 @@
         <p class="text-sm text-gray-300 mt-2">しばらくそのままお待ちください</p>
     </div>
 
-    <div class="hamburger-menu fixed top-5 left-5 w-8 h-6 cursor-pointer z-[5000] flex flex-col justify-between" id="hamburgerMenu">
-        <span class="block w-full h-[3px] bg-white rounded"></span>
-        <span class="block w-full h-[3px] bg-white rounded"></span>
-        <span class="block w-full h-[3px] bg-white rounded"></span>
+    <div class="hamburger-menu fixed top-5 left-5 w-8 h-5 cursor-pointer z-[5000]" id="hamburgerMenu">
+        <span></span>
+        <span></span>
+        <span></span>
     </div>
 
     <nav class="sidebar fixed top-0 left-0 w-64 h-full bg-gray-900/95 backdrop-blur-md border-r border-white/10 z-[4000] pt-20 -translate-x-full transition-transform duration-300" id="sidebar">
         <ul>
-            <li>
-                <a href="/" class="flex items-center px-6 py-4 text-lg text-white hover:bg-white/10 transition-colors border-b border-white/10">
-                    <div style="width:40px; text-align:center;"><i class="fa-solid fa-house fa-lg"></i></div>
-                    <span class="ml-2 font-bold">ホーム</span>
-                </a>
-            </li>
-            <li>
-                <a href="/Typamera/templates/typing.html" class="flex items-center px-6 py-4 text-lg text-white hover:bg-white/10 transition-colors border-b border-white/10">
-                    <div style="width:40px; text-align:center;"><i class="fa-solid fa-keyboard fa-lg text-amber-400"></i></div>
-                    <span class="ml-2 font-bold">タイピング</span>
-                </a>
-            </li>
-            <li>
-                <a href="/Privacy/index.html" class="flex items-center px-6 py-4 text-lg text-white hover:bg-white/10 transition-colors border-b border-white/10">
-                    <div style="width:40px; text-align:center;"><i class="fa-solid fa-video fa-lg text-indigo-500"></i></div>
-                    <span class="ml-2 font-bold">プライバシーガード</span>
-                </a>
-            </li>
+            <li><a href="/" class="flex items-center px-6 py-4 text-lg text-white hover:bg-white/10 transition-colors border-b border-white/10"><div style="width:40px; text-align:center;"><i class="fa-solid fa-house fa-lg"></i></div><span class="ml-2 font-bold">ホーム</span></a></li>
+            <li><a href="/Typamera/templates/typing.html" class="flex items-center px-6 py-4 text-lg text-white hover:bg-white/10 transition-colors border-b border-white/10"><div style="width:40px; text-align:center;"><i class="fa-solid fa-keyboard fa-lg text-amber-400"></i></div><span class="ml-2 font-bold">タイピング</span></a></li>
+            <li><a href="/Privacy/index.html" class="flex items-center px-6 py-4 text-lg text-white hover:bg-white/10 transition-colors border-b border-white/10"><div style="width:40px; text-align:center;"><i class="fa-solid fa-video fa-lg text-indigo-500"></i></div><span class="ml-2 font-bold">プライバシーガード</span></a></li>
         </ul>
     </nav>
 
@@ -68,6 +64,7 @@
         <h1 class="text-3xl md:text-4xl font-extrabold mt-10 mb-8 text-pink-400 drop-shadow-lg text-center">
             <i class="fa-solid fa-shirt mr-3"></i>ファッション採点
         </h1>
+        
         <form method="POST" enctype="multipart/form-data" action="{{ url_for('scoring.saiten') }}" class="w-full" id="scoringForm">
             <label class="block text-gray-300 font-bold mb-2"><i class="fa-regular fa-image mr-2"></i>画像をアップロード</label>
             <div class="flex flex-col gap-3 mb-6">
@@ -138,5 +135,14 @@
     </div>
     
     <script src="{{ url_for('scoring.static', filename='js/saiten.js') }}"></script>
+    <script>
+        const hamburger = document.getElementById('hamburgerMenu');
+        const sidebar = document.getElementById('sidebar');
+
+        hamburger.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-full');
+            hamburger.classList.toggle('open');
+        });
+    </script>
 </body>
 </html>
