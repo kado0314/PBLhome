@@ -12,7 +12,8 @@ plt.style.use('dark_background')
 
 def generate_radar_chart(aspect_scores):
     """
-    関数名はそのまま維持しますが、中身は「横棒グラフ（データバー）」を生成します。
+    横棒グラフ（データバー）を生成します。
+    サイズ(10x6)と文字サイズ(14)を大きく調整した最終版です。
     """
     # --- フォント設定 ---
     try:
@@ -30,8 +31,8 @@ def generate_radar_chart(aspect_scores):
 
     # --- データ準備 ---
     labels = []
-    percentages = [] # グラフの長さ用（0-100%）
-    text_labels = [] # 表示用テキスト（例: "18 / 20"）
+    percentages = []
+    text_labels = []
     
     label_map = {
         'color_harmony': '色の調和',
@@ -44,15 +45,13 @@ def generate_radar_chart(aspect_scores):
         'photogenic_quality': '写真映え'
     }
 
-    # 辞書の順序を維持したいので、label_mapのキー順で回す
     for key, label_text in label_map.items():
         score = aspect_scores.get(key, 0)
-        
-        # 満点を取得
+        # 満点を取得（デフォルト10）
         max_score = SCORE_WEIGHTS.get(key, 10.0)
         if max_score == 0: max_score = 10.0
         
-        # キャップ処理
+        # 安全対策：スコアが満点を超えていたら満点に丸める
         if score > max_score: score = max_score
 
         # グラフの長さ用に100%換算
@@ -60,50 +59,52 @@ def generate_radar_chart(aspect_scores):
         
         labels.append(label_text)
         percentages.append(pct)
+        # 表示用テキスト "得点/満点"
         text_labels.append(f"{int(score)}/{int(max_score)}")
 
-    # 表示順を逆にする（グラフは下から描画されるため、リストを反転させて上から表示させる）
+    # 表示順を逆にする（上から順に表示させるため）
     labels = labels[::-1]
     percentages = percentages[::-1]
     text_labels = text_labels[::-1]
 
     # --- 描画 ---
-    # 横長の比率に設定
-    fig, ax = plt.subplots(figsize=(8, 5))
+    # ▼▼▼ サイズを大きく設定 (横10, 縦6) ▼▼▼
+    fig, ax = plt.subplots(figsize=(10, 6))
     fig.patch.set_facecolor('none')
     ax.set_facecolor('none')
 
-    # Y軸の位置（項目数分）
     y_pos = range(len(labels))
 
-    # 1. 背景のバー（薄いグレーで満点=100%の長さを描画）
-    ax.barh(y_pos, [100]*len(y_pos), height=0.6, align='center', 
+    # 1. 背景のバー（薄いグレーで満点の長さを描画）
+    ax.barh(y_pos, [100]*len(y_pos), height=0.65, align='center', 
             color='gray', alpha=0.2, edgecolor='none')
 
     # 2. スコアのバー（ピンクで実際のスコアを描画）
-    # 角を少し丸く見せるためにlinewidthを太くしたりもできますが、シンプルに描画
-    bars = ax.barh(y_pos, percentages, height=0.6, align='center', 
-                   color='#ec4899', edgecolor='none', alpha=0.9)
+    ax.barh(y_pos, percentages, height=0.65, align='center', 
+            color='#ec4899', edgecolor='none', alpha=0.9)
 
-    # 3. テキスト表示（バーの右端に「18/20」のような数字を表示）
+    # 3. テキスト表示
     for i, (pct, text) in enumerate(zip(percentages, text_labels)):
-        # バーの少し右側に配置
+        # ▼▼▼ 文字サイズを大きく (fontsize=14) ▼▼▼
         ax.text(102, i, text, va='center', ha='left', 
-                color='white', fontsize=11, fontweight='bold')
+                color='white', fontsize=14, fontweight='bold')
 
     # --- 見た目の調整 ---
     ax.set_yticks(y_pos)
-    ax.set_yticklabels(labels, fontsize=11, color='white')
+    # ▼▼▼ 項目名の文字サイズも大きく (fontsize=14) ▼▼▼
+    ax.set_yticklabels(labels, fontsize=14, color='white')
     
-    # 不要な枠線や目盛りを消す
-    ax.set_xlim(0, 115) # テキストが入るように右側を空ける
-    ax.set_xticks([])   # 下の目盛り（0, 20, 40...）を消す
+    # レイアウト調整
+    ax.set_xlim(0, 120) # テキストエリア確保のため右を空ける
+    ax.set_xticks([])   # 下の目盛りを消す
+    
+    # 枠線を消す
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
     ax.spines['left'].set_visible(False)
     
-    # 軸のティック（ヒゲ）を消す
+    # 軸のヒゲを消す
     ax.tick_params(axis='y', length=0)
 
     # 保存
