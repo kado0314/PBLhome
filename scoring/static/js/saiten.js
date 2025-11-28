@@ -189,6 +189,7 @@ if (cancelRegisterBtn) {
     });
 }
 
+// ▼▼▼ ここを修正（入力チェック追加） ▼▼▼
 if (confirmRegisterBtn) {
     confirmRegisterBtn.addEventListener('click', async () => {
         const name = document.getElementById('rankName').value;
@@ -204,6 +205,19 @@ if (confirmRegisterBtn) {
         
         if (!name) {
             alert('ニックネームを入力してください');
+            return;
+        }
+
+        // ▼ 入力チェック: 英数字と日本語のみ許可（記号・スペース禁止）
+        const validPattern = /^[a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]+$/;
+        if (!validPattern.test(name)) {
+            alert('ニックネームには「文字」と「数字」のみ使用できます。\n（記号やスペースは使えません）');
+            return;
+        }
+        
+        // ▼ パスワードチェック: 半角英数字のみ
+        if (pass && !/^[a-zA-Z0-9]+$/.test(pass)) {
+            alert('パスワードは「半角英数字」のみ使用できます。');
             return;
         }
         
@@ -231,7 +245,7 @@ if (confirmRegisterBtn) {
                 rankingViewModal.classList.remove('hidden');
                 fetchRanking();
             } else {
-                alert('登録に失敗しました: ' + (result.message || '不明なエラー'));
+                alert('登録に失敗しました: ' + (result.message || '入力内容を確認してください'));
             }
         } catch (e) {
             alert('通信エラーが発生しました');
