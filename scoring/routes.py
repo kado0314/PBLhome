@@ -1,7 +1,20 @@
 import base64
-from flask import Blueprint, render_template, request, url_for
+from flask import Blueprint, render_template, request, jsonify
 from .scorer_main import FashionScorer
 from .chart_generator import generate_radar_chart
+import sys
+import os
+
+# ranking_managerをインポートできるようにパスを通す
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# ※もしインポートエラーになる場合は try-except で囲むなどの調整が必要ですが、基本はこれで通ります
+try:
+    from ranking_manager import get_ranking, add_ranking_entry, delete_ranking_entry
+except ImportError:
+    # ローカル開発などでファイルがない場合のダミー関数
+    def get_ranking(): return []
+    def add_ranking_entry(n, s, d): return False
+    def delete_ranking_entry(n, d): return False
 
 scoring_bp = Blueprint(
     "scoring", 
@@ -13,7 +26,6 @@ scoring_bp = Blueprint(
 
 @scoring_bp.route("/", methods=["GET"])
 def index():
-    # ▼▼▼ 性別初期値を削除 ▼▼▼
     return render_template("saiten.html", uploaded_image_data=False, selected_scene="date", score=None)
 
 @scoring_bp.route("/saiten", methods=["GET", "POST"])
@@ -27,7 +39,6 @@ def saiten():
         )
         
     image_file = request.files.get("image_file")
-    # ▼▼▼ 性別取得を削除 ▼▼▼
     intended_scene = request.form.get("intended_scene", "date")
 
     if not image_file:
@@ -40,7 +51,6 @@ def saiten():
 
     image_data = base64.b64encode(image_file.read()).decode("utf-8")
     
-    # ▼▼▼ 性別引数を削除して初期化 ▼▼▼
     scorer = FashionScorer()
     metadata = {
         "user_locale": "ja-JP", 
@@ -48,7 +58,6 @@ def saiten():
     }
     result = scorer.analyze(image_data, metadata)
 
-    # グラフ用データの安全な取得
     aspect_scores = result.get("subscores", None)
     if not aspect_scores:
         aspect_scores = {
@@ -68,3 +77,41 @@ def saiten():
         radar_chart_data=radar_chart_data,
         selected_scene=intended_scene
     )
+
+# ▼▼▼ ランキング用API ▼▼▼
+
+@scoring_bp.route("/api/ranking", methods=["GET"])
+def api_get_ranking():
+    data = get_ranking()
+    return jsonify(data)
+
+@scoring_bp.route("/api/ranking", methods=["POST"])
+def api_add_ranking():
+    data = request.json
+    name = data.get("name")
+    score = data.get("score")
+    delete_pass = data.get("delete_pass")
+    
+    if not name or score is None:
+        return jsonify({"success": False, "message": "データが不足しています"}), 400
+        
+    success = add_ranking_entry(name, float(score), delete_pass)
+    if success:
+        return jsonify({"success": True})
+    else:
+        return jsonify({"success": False, "message": "登録に失敗しました"}), 500
+
+@scoring_bp.route("/api/ranking/delete", methods=["POST"])
+def api_delete_ranking():
+    data = request.json
+    name = data.get("name")
+    delete_pass = data.get("delete_pass")
+    
+    if not name or not delete_pass:
+        return jsonify({"success": False, "message": "情報が不足しています"}), 400
+
+    success = delete_ranking_entry(name, delete_pass)
+    if success:
+        return jsonify({"success": True, "message": "削除しました"})
+    else:
+        return jsonify({"success": False, "message": "削除できませんでした（パスワード不一致など）"}), 400
