@@ -14,9 +14,7 @@
     <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-pink-600 rounded-full blur-[100px] opacity-20 -z-10 pointer-events-none"></div>
 
     <div id="loadingOverlay" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-[6000] hidden flex flex-col items-center justify-center">
-        <div class="animate-spin text-pink-500 text-6xl mb-4">
-            <i class="fa-solid fa-shirt"></i>
-        </div>
+        <div class="animate-spin text-pink-500 text-6xl mb-4"><i class="fa-solid fa-shirt"></i></div>
         <p class="text-xl font-bold text-pink-400 animate-pulse">AIが採点中...</p>
         <p class="text-sm text-gray-300 mt-2">しばらくそのままお待ちください</p>
     </div>
@@ -95,25 +93,26 @@
 
         {% if score is not none %}
         <div class="results fade-in w-full mt-8">
-            <div class="res-head w-full text-center">
+            <div class="res-head w-full text-center mb-8">
                 <h2 class="text-2xl font-bold mb-4 text-white">総合スコア</h2>
                 <span class="score block text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-rose-300 my-4 drop-shadow-sm">{{ score }}<span class="text-4xl ml-1 text-pink-300">点</span></span>
                 <p class="text-xl mt-2 font-light text-gray-200">{{ recommendation }}</p>
             </div>
             
-            <div class="res-body flex flex-col md:flex-row gap-6 mt-8">
-                <div class="rating flex-1">
+            <div class="res-body flex flex-col gap-8 w-full">
+                
+                <div class="rating w-full">
                     <h4 class="text-lg font-bold mb-3 text-pink-300">AIからのフィードバック</h4>
                     <ul class="space-y-2">
                         {% for f in feedback %}
-                            <li class="bg-white/5 p-3 rounded border-l-4 border-pink-500"><i class="fa-solid fa-check mr-2 text-green-400"></i>{{ f }}</li>
+                            <li class="bg-white/5 p-4 rounded border-l-4 border-pink-500 text-lg"><i class="fa-solid fa-check mr-2 text-green-400"></i>{{ f }}</li>
                         {% endfor %}
                     </ul>
                 </div>
                 
                 {% if radar_chart_data %}
-                <div class="chart flex-1 flex justify-center items-center rounded-lg p-2">
-                    <img src="{{ radar_chart_data }}" alt="レーダーチャート" class="max-w-full h-auto drop-shadow-[0_0_10px_rgba(236,72,153,0.3)]">
+                <div class="chart w-full flex justify-center items-center rounded-lg p-1">
+                    <img src="{{ radar_chart_data }}" alt="データバー" class="w-full h-auto drop-shadow-[0_0_15px_rgba(236,72,153,0.2)]">
                 </div>
                 {% endif %}
             </div>
