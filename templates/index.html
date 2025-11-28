@@ -78,6 +78,14 @@
         .visit-btn:hover::after {
             left: 100%;
         }
+
+        /* ▼▼▼ 追加: sm:text-6xl のサイズ調整 ▼▼▼ */
+        @media (min-width: 640px) {
+            .sm\:text-6xl {
+                font-size: 3.3rem !important; /* !importantをつけてTailwindのデフォルトより優先させます */
+                line-height: 1;
+            }
+        }
     </style>
 </head>
 <body class="h-screen w-screen bg-gray-900 text-white relative">
@@ -150,7 +158,6 @@
                 title: "ファッション採点",
                 bgText: "FASHION",
                 desc: "AIがあなたのコーディネートを瞬時に採点。客観的なスコアで、毎日のファッション選びをもっと楽しく。",
-                // ▼▼▼ 修正箇所: FlaskのルートURLへ変更 ▼▼▼
                 url: "/scoring/saiten",
                 color: "#ec4899", // pink-500
                 darkColor: "#831843", // pink-900
@@ -162,7 +169,6 @@
                 title: "プライバシーガード",
                 bgText: "SECURITY",
                 desc: "Webカメラを活用した防犯システム。背後に人が近づいたことを検知し、即座に通知画面でお知らせします。",
-                // ▼▼▼ 修正箇所: Privacyフォルダ内のパスへ変更 ▼▼▼
                 url: "Privacy/index.html",
                 color: "#6366f1", // indigo-500
                 darkColor: "#312e81", // indigo-900
@@ -174,7 +180,6 @@
                 title: "タイピング",
                 bgText: "TYPING",
                 desc: "カメラ機能と連動した究極のタイピングゲーム。スピードと正確性が試されます。",
-                // ▼▼▼ 修正箇所: Typameraフォルダ内のパスへ変更 ▼▼▼
                 url: "Typamera/templates/typing.html",
                 color: "#fbbf24", // amber-400
                 darkColor: "#78350f", // amber-900
