@@ -133,7 +133,7 @@
     </div>
 
     <div id="rankingViewModal" class="fixed inset-0 bg-black/80 z-[7000] hidden flex items-center justify-center p-4">
-        <div class="bg-gray-800 border border-yellow-500/30 rounded-2xl p-6 max-w-2xl w-full shadow-2xl h-[80vh] flex flex-col">
+        <div class="bg-gray-800 border border-yellow-500/30 rounded-2xl p-6 max-w-3xl w-full shadow-2xl h-[80vh] flex flex-col">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-2xl font-bold text-yellow-400"><i class="fa-solid fa-crown mr-2"></i>ランキング TOP100</h3>
                 <button id="closeRankingViewBtn" class="text-gray-400 hover:text-white text-2xl"><i class="fa-solid fa-xmark"></i></button>
@@ -141,16 +141,17 @@
             
             <div class="flex-1 overflow-y-auto pr-2">
                 <table class="w-full text-left text-gray-300">
-                    <thead class="text-xs uppercase bg-gray-700/50 text-gray-400 sticky top-0 backdrop-blur-md">
+                    <thead class="text-xs uppercase bg-gray-700/50 text-gray-400 sticky top-0 backdrop-blur-md z-10">
                         <tr>
                             <th class="px-4 py-3 rounded-l-lg">順位</th>
+                            <th class="px-4 py-3">画像</th>
                             <th class="px-4 py-3">名前</th>
                             <th class="px-4 py-3">スコア</th>
                             <th class="px-4 py-3 rounded-r-lg">日付</th>
                         </tr>
                     </thead>
                     <tbody id="rankingTableBody">
-                        <tr><td colspan="4" class="text-center py-4">読み込み中...</td></tr>
+                        <tr><td colspan="5" class="text-center py-4">読み込み中...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -169,18 +170,14 @@
     <div id="registerModal" class="fixed inset-0 bg-black/80 z-[7000] hidden flex items-center justify-center p-4">
         <div class="bg-gray-800 border border-pink-500/30 rounded-2xl p-8 max-w-md w-full shadow-2xl">
             <h3 class="text-2xl font-bold text-white mb-4 text-center">ランキング登録</h3>
-            
             <div class="bg-red-500/20 border border-red-500 text-red-200 p-4 rounded-lg mb-6 text-sm">
                 <i class="fa-solid fa-triangle-exclamation mr-2"></i>
-                <strong>警告:</strong> 登録すると、ニックネームと点数が全世界に公開されます。本名は避けてください。
+                <strong>警告:</strong> 登録すると、ニックネームと点数、画像が全世界に公開されます。
             </div>
-
             <label class="block text-gray-300 text-sm font-bold mb-2">ニックネーム (必須)</label>
             <input type="text" id="rankName" class="w-full bg-gray-900 border border-gray-600 text-white rounded p-3 mb-4 focus:border-pink-500 outline-none" placeholder="例: オシャレ番長">
-
             <label class="block text-gray-300 text-sm font-bold mb-2">削除用パスワード (任意)</label>
             <input type="password" id="rankPass" class="w-full bg-gray-900 border border-gray-600 text-white rounded p-3 mb-6 focus:border-pink-500 outline-none" placeholder="後で消すために必要です">
-
             <div class="flex gap-4">
                 <button id="cancelRegisterBtn" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 rounded-lg">キャンセル</button>
                 <button id="confirmRegisterBtn" class="flex-1 bg-pink-600 hover:bg-pink-500 text-white font-bold py-3 rounded-lg">同意して登録</button>
