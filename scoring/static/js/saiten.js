@@ -1,28 +1,33 @@
 // scoring/static/js/saiten.js
 
-// DOM要素の取得
 const imageInput = document.getElementById('imageInput');
 const imagePreview = document.getElementById('imagePreview');
-const fileNameDisplay = document.getElementById('fileName'); // 追加
-const toggleCameraBtn = document.getElementById('toggleCameraBtn'); // 名前変更
+const fileNameDisplay = document.getElementById('fileName');
+const toggleCameraBtn = document.getElementById('toggleCameraBtn');
 const cameraArea = document.getElementById('cameraArea');
 const cameraVideo = document.getElementById('cameraVideo');
 const takePhotoBtn = document.getElementById('takePhotoBtn');
-const scoringForm = document.getElementById('scoringForm'); // 追加
-const loadingOverlay = document.getElementById('loadingOverlay'); // 追加
-const submitBtn = document.getElementById('submitBtn'); // 追加
+const scoringForm = document.getElementById('scoringForm');
+const loadingOverlay = document.getElementById('loadingOverlay');
+const submitBtn = document.getElementById('submitBtn');
 const hamburger = document.getElementById('hamburgerMenu');
 const sidebar = document.getElementById('sidebar');
 
+// ランキング用
+const showRankingModalBtn = document.getElementById('showRankingModalBtn');
+const rankingModal = document.getElementById('rankingModal');
+const cancelRankBtn = document.getElementById('cancelRankBtn');
+const confirmRankBtn = document.getElementById('confirmRankBtn');
+const rankingTableBody = document.getElementById('rankingTableBody');
+const deleteEntryBtn = document.getElementById('deleteEntryBtn');
+
 let cameraStream = null;
 
-// --- ファイル選択時の処理 ---
+// ファイル選択
 imageInput.addEventListener('change', function(event) {
     const file = event.target.files[0];
     if (file) {
-        // ファイル名を表示
         fileNameDisplay.textContent = file.name;
-        // プレビュー表示
         const reader = new FileReader();
         reader.onload = function(e) {
             imagePreview.src = e.target.result;
@@ -36,9 +41,7 @@ imageInput.addEventListener('change', function(event) {
     }
 });
 
-// --- カメラ関連の関数 ---
-
-// カメラを停止する関数
+// カメラ制御
 function stopCamera() {
     if (cameraStream) {
         cameraStream.getTracks().forEach(track => track.stop());
@@ -46,61 +49,43 @@ function stopCamera() {
     }
     cameraVideo.srcObject = null;
     cameraArea.classList.add('hidden');
-    // ボタンの表示を戻す
     toggleCameraBtn.innerHTML = '<i class="fa-solid fa-camera mr-2"></i><span>カメラ起動</span>';
     toggleCameraBtn.classList.remove('bg-gray-600', 'hover:bg-gray-500');
     toggleCameraBtn.classList.add('from-pink-600', 'to-rose-600', 'hover:from-pink-500', 'hover:to-rose-500');
 }
 
-// カメラを起動する関数
 async function startCamera() {
     try {
         cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
         cameraVideo.srcObject = cameraStream;
         cameraArea.classList.remove('hidden');
-        imagePreview.classList.add('hidden'); // プレビューは隠す
-        
-        // ボタンの表示を「閉じる」に変更
+        imagePreview.classList.add('hidden');
         toggleCameraBtn.innerHTML = '<i class="fa-solid fa-xmark mr-2"></i><span>カメラを閉じる</span>';
         toggleCameraBtn.classList.remove('from-pink-600', 'to-rose-600', 'hover:from-pink-500', 'hover:to-rose-500');
         toggleCameraBtn.classList.add('bg-gray-600', 'hover:bg-gray-500');
-
     } catch (err) {
         alert("カメラを起動できませんでした: " + err);
     }
 }
 
-// ① カメラ起動/終了ボタンのトグル処理
 toggleCameraBtn.addEventListener('click', () => {
-    if (cameraStream) {
-        stopCamera(); // 起動中なら停止
-    } else {
-        startCamera(); // 停止中なら起動
-    }
+    if (cameraStream) stopCamera();
+    else startCamera();
 });
 
-// ② 「撮影する」ボタンの処理
 takePhotoBtn.addEventListener('click', () => {
     if (!cameraStream) return;
-
     const canvas = document.createElement('canvas');
     canvas.width = cameraVideo.videoWidth;
     canvas.height = cameraVideo.videoHeight;
     const ctx = canvas.getContext('2d');
-    
-    // 映像が反転しているので、Canvasにも反転して描画
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(cameraVideo, 0, 0, canvas.width, canvas.height);
-
     const dataUrl = canvas.toDataURL("image/jpeg");
-
-    // プレビュー表示
     imagePreview.src = dataUrl;
     imagePreview.classList.remove('hidden');
     fileNameDisplay.textContent = "カメラで撮影した画像";
-
-    // input[type=file] にデータをセット
     fetch(dataUrl)
         .then(res => res.arrayBuffer())
         .then(buffer => {
@@ -109,32 +94,133 @@ takePhotoBtn.addEventListener('click', () => {
             dt.items.add(file);
             imageInput.files = dt.files;
         });
-
-    // 撮影したらカメラを自動停止
     stopCamera();
 });
 
-
-// --- フォーム送信時の処理 (ローディング表示) ---
 scoringForm.addEventListener('submit', function(event) {
-    // 画像が選択されていない場合は送信しない（HTMLのrequired属性でもいいが念のため）
     if (!imageInput.files.length) {
         alert("画像を選択するか、カメラで撮影してください。");
         event.preventDefault();
         return;
     }
-
-    // ローディング表示
     loadingOverlay.classList.remove('hidden');
-    // 送信ボタンを無効化して二重送信防止
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-3"></i>採点中...';
     submitBtn.classList.add('opacity-70', 'cursor-not-allowed');
 });
 
-
-// --- ハンバーガーメニュー制御 ---
 hamburger.addEventListener('click', () => {
     sidebar.classList.toggle('-translate-x-full');
     hamburger.classList.toggle('open');
 });
+
+// ▼▼▼ ランキング関連処理 ▼▼▼
+
+async function fetchRanking() {
+    if(!rankingTableBody) return;
+    try {
+        const res = await fetch('/scoring/api/ranking');
+        const data = await res.json();
+        rankingTableBody.innerHTML = '';
+        if (data.length === 0) {
+            rankingTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">データがありません</td></tr>';
+            return;
+        }
+        data.forEach((entry, index) => {
+            let rankIcon = `<span class="font-bold text-gray-400">${index + 1}</span>`;
+            if (index === 0) rankIcon = '<i class="fa-solid fa-crown text-yellow-400"></i>';
+            if (index === 1) rankIcon = '<i class="fa-solid fa-crown text-gray-300"></i>';
+            if (index === 2) rankIcon = '<i class="fa-solid fa-crown text-amber-600"></i>';
+            const row = `
+                <tr class="border-b border-gray-700 hover:bg-white/5 transition">
+                    <td class="px-4 py-3 text-center">${rankIcon}</td>
+                    <td class="px-4 py-3 font-bold text-white">${entry.name}</td>
+                    <td class="px-4 py-3 text-pink-400 font-mono text-lg">${entry.score}</td>
+                    <td class="px-4 py-3 text-sm text-gray-500">${entry.date}</td>
+                </tr>
+            `;
+            rankingTableBody.insertAdjacentHTML('beforeend', row);
+        });
+    } catch (e) {
+        console.error("Ranking Fetch Error:", e);
+        rankingTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-red-400">読み込みエラー</td></tr>';
+    }
+}
+
+// ページ読み込み時にランキング取得
+document.addEventListener('DOMContentLoaded', fetchRanking);
+
+if (showRankingModalBtn) {
+    showRankingModalBtn.addEventListener('click', () => {
+        rankingModal.classList.remove('hidden');
+    });
+}
+
+if (cancelRankBtn) {
+    cancelRankBtn.addEventListener('click', () => {
+        rankingModal.classList.add('hidden');
+    });
+}
+
+if (confirmRankBtn) {
+    confirmRankBtn.addEventListener('click', async () => {
+        const name = document.getElementById('rankName').value;
+        const pass = document.getElementById('rankPass').value;
+        const scoreElement = document.getElementById('currentScoreValue');
+        
+        if (!name) {
+            alert('ニックネームを入力してください');
+            return;
+        }
+        
+        const score = scoreElement ? scoreElement.getAttribute('data-score') : 0;
+        confirmRankBtn.disabled = true;
+        confirmRankBtn.textContent = '送信中...';
+
+        try {
+            const res = await fetch('/scoring/api/ranking', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name, score: score, delete_pass: pass })
+            });
+            const result = await res.json();
+            if (result.success) {
+                alert('ランキングに登録しました！');
+                rankingModal.classList.add('hidden');
+                fetchRanking();
+                showRankingModalBtn.classList.add('hidden');
+            } else {
+                alert('登録に失敗しました');
+            }
+        } catch (e) {
+            alert('通信エラーが発生しました');
+        } finally {
+            confirmRankBtn.disabled = false;
+            confirmRankBtn.textContent = '同意して登録';
+        }
+    });
+}
+
+if (deleteEntryBtn) {
+    deleteEntryBtn.addEventListener('click', async () => {
+        const name = document.getElementById('delName').value;
+        const pass = document.getElementById('delPass').value;
+        if(!name || !pass) {
+            alert('名前と削除パスを入力してください');
+            return;
+        }
+        if(!confirm(`本当に「${name}」のデータを削除しますか？`)) return;
+        try {
+            const res = await fetch('/scoring/api/ranking/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name, delete_pass: pass })
+            });
+            const result = await res.json();
+            alert(result.message);
+            if(result.success) fetchRanking();
+        } catch(e) {
+            alert('通信エラー');
+        }
+    });
+}
