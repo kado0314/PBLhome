@@ -124,3 +124,54 @@ def delete_ranking_entry(name, delete_pass):
     except Exception as e:
         print(f"Delete Error: {e}")
         return False
+def delete_ranking_entry(name, delete_pass):
+    """名前とパスワードが一致したら、スプレッドシートと画像のデータを削除"""
+    try:
+        client = get_client()
+        sheet = client.open_by_key(SPREADSHEET_KEY).sheet1
+        records = sheet.get_all_records()
+        
+        deleted = False
+        target_name = str(name).strip()
+        target_pass = str(delete_pass).strip()
+
+        print(f"--- Delete Request: Name=[{target_name}], Pass=[{target_pass}] ---")
+
+        for i, record in reversed(list(enumerate(records))):
+            row_num = i + 2
+            sheet_name = str(record.get('name', '')).strip()
+            sheet_pass = str(record.get('delete_pass', '')).strip()
+            
+            if sheet_name == target_name and sheet_pass == target_pass:
+                # ▼▼▼ 追加: 画像削除処理 ▼▼▼
+                image_url = record.get('image_url', '')
+                if image_url:
+                    try:
+                        # URLからPublic ID (ファイルID) を抽出するロジック
+                        # 例: https://.../upload/v1234/fashion_ranking/filename.jpg
+                        # Cloudinaryで削除するには "fashion_ranking/filename" (拡張子なし) が必要
+                        
+                        # URLの最後のパーツ（filename.jpg）を取得
+                        filename_with_ext = image_url.split('/')[-1]
+                        # 拡張子 (.jpg) を除去
+                        public_id_name = filename_with_ext.split('.')[0]
+                        # フォルダ名を付与
+                        full_public_id = f"fashion_ranking/{public_id_name}"
+                        
+                        # Cloudinaryから削除を実行
+                        cloudinary.uploader.destroy(full_public_id)
+                        print(f"Cloudinary Image Deleted: {full_public_id}")
+                        
+                    except Exception as img_err:
+                        print(f"Cloudinary Delete Error (Ignored): {img_err}")
+
+                # ▼▼▼ スプレッドシートの行削除 ▼▼▼
+                sheet.delete_rows(row_num)
+                deleted = True
+                print(f"!!! Deleted Row {row_num} !!!")
+                break
+        
+        return deleted
+    except Exception as e:
+        print(f"Delete Error: {e}")
+        return False
