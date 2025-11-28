@@ -136,10 +136,8 @@ async function fetchRanking() {
             if (index === 1) rankIcon = '<i class="fa-solid fa-crown text-gray-300 text-xl"></i>';
             if (index === 2) rankIcon = '<i class="fa-solid fa-crown text-amber-600 text-xl"></i>';
 
-            // 画像セルの生成
             let imageCell = '<span class="text-gray-600">-</span>';
             if (entry.image_url) {
-                // サムネイル表示
                 imageCell = `<a href="${entry.image_url}" target="_blank">
                                 <img src="${entry.image_url}" alt="img" class="w-16 h-16 object-cover rounded-lg border border-gray-700 hover:border-pink-500 transition">
                              </a>`;
@@ -189,33 +187,34 @@ if (cancelRegisterBtn) {
     });
 }
 
-// ▼▼▼ ここを修正（入力チェック追加） ▼▼▼
+// ▼▼▼ 登録ボタンの処理（ここが重要） ▼▼▼
 if (confirmRegisterBtn) {
     confirmRegisterBtn.addEventListener('click', async () => {
         const name = document.getElementById('rankName').value;
         const pass = document.getElementById('rankPass').value;
         const scoreElement = document.getElementById('currentScoreValue');
         
-        // 採点結果の画像を取得
-        const targetImage = document.querySelector('.target img');
+        // ▼▼▼ 修正: resultImage IDから確実に画像データを取得 ▼▼▼
+        const resultImage = document.getElementById('resultImage');
         let imageData = null;
-        if (targetImage) {
-            imageData = targetImage.src;
+        if (resultImage) {
+            imageData = resultImage.src;
+        } else {
+            console.error("画像が見つかりません (id='resultImage' missing)");
         }
-        
+        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
         if (!name) {
             alert('ニックネームを入力してください');
             return;
         }
 
-        // ▼ 入力チェック: 英数字と日本語のみ許可（記号・スペース禁止）
+        // 入力制限チェック
         const validPattern = /^[a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]+$/;
         if (!validPattern.test(name)) {
             alert('ニックネームには「文字」と「数字」のみ使用できます。\n（記号やスペースは使えません）');
             return;
         }
-        
-        // ▼ パスワードチェック: 半角英数字のみ
         if (pass && !/^[a-zA-Z0-9]+$/.test(pass)) {
             alert('パスワードは「半角英数字」のみ使用できます。');
             return;
@@ -233,7 +232,7 @@ if (confirmRegisterBtn) {
                     name: name, 
                     score: score, 
                     delete_pass: pass,
-                    image_data: imageData 
+                    image_data: imageData // ここで画像データを送信
                 })
             });
             
@@ -260,14 +259,11 @@ if (deleteEntryBtn) {
     deleteEntryBtn.addEventListener('click', async () => {
         const name = document.getElementById('delName').value;
         const pass = document.getElementById('delPass').value;
-        
         if(!name || !pass) {
             alert('名前と削除パスを入力してください');
             return;
         }
-        
         if(!confirm(`本当に「${name}」のデータを削除しますか？`)) return;
-
         try {
             const res = await fetch('/scoring/api/ranking/delete', {
                 method: 'POST',
