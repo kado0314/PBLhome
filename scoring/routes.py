@@ -5,15 +5,14 @@ from .chart_generator import generate_radar_chart
 import sys
 import os
 
-# ranking_managerをインポートできるようにパスを通す
+# ranking_managerをインポート
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-# ※もしインポートエラーになる場合は try-except で囲むなどの調整が必要ですが、基本はこれで通ります
 try:
     from ranking_manager import get_ranking, add_ranking_entry, delete_ranking_entry
 except ImportError:
-    # ローカル開発などでファイルがない場合のダミー関数
+    # 開発環境用ダミー
     def get_ranking(): return []
-    def add_ranking_entry(n, s, d): return False
+    def add_ranking_entry(n, s, d, i=None): return False
     def delete_ranking_entry(n, d): return False
 
 scoring_bp = Blueprint(
@@ -91,11 +90,14 @@ def api_add_ranking():
     name = data.get("name")
     score = data.get("score")
     delete_pass = data.get("delete_pass")
+    # 画像データを受け取る
+    image_data = data.get("image_data")
     
     if not name or score is None:
         return jsonify({"success": False, "message": "データが不足しています"}), 400
         
-    success = add_ranking_entry(name, float(score), delete_pass)
+    # 画像データも含めて登録関数へ
+    success = add_ranking_entry(name, float(score), delete_pass, image_data)
     if success:
         return jsonify({"success": True})
     else:
