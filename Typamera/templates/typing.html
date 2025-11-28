@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="typing.css">
 
     <style>
+        /* ハンバーガーメニュー (絶対配置で崩れ防止) */
         .hamburger-menu span {
             position: absolute;
             left: 0;
@@ -20,12 +21,10 @@
             border-radius: 4px;
             transition: all 0.3s ease-in-out;
         }
-        /* 閉じてる時：上・中・下に配置 */
         .hamburger-menu span:nth-child(1) { top: 0; }
         .hamburger-menu span:nth-child(2) { top: 50%; transform: translateY(-50%); }
         .hamburger-menu span:nth-child(3) { bottom: 0; }
 
-        /* 開いてる時：全部真ん中に集めて回転 */
         .hamburger-menu.open span:nth-child(1) {
             top: 50%;
             transform: translateY(-50%) rotate(45deg);
@@ -73,7 +72,8 @@
     </nav>
 
     <div class="container mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-screen">
-        <h1 class="text-4xl md:text-5xl font-extrabold mb-2 text-amber-400 drop-shadow-lg">
+        
+        <h1 class="text-3xl md:text-4xl font-extrabold mb-2 text-amber-400 drop-shadow-lg">
             <i class="fa-solid fa-keyboard mr-3"></i>Typing Challenge
         </h1>
         <p class="text-gray-400 mb-8 font-light">カメラに映っている物を英語でタイピング！</p>
@@ -87,27 +87,33 @@
                     <i class="fa-solid fa-list mr-2"></i>お題リスト
                 </button>
             </div>
+            
             <p id="status" class="text-center text-blue-400 font-bold h-6 mb-4">準備中...</p>
+            
             <div class="video-container mb-6 relative group">
                 <video id="webcam" autoplay muted playsinline class="w-full h-auto rounded-lg"></video>
                 <canvas id="gameCanvas" style="display: none;"></canvas>
             </div>
+            
             <div class="game-info bg-gray-900/50 rounded-xl p-6 border border-white/5">
                 <div id="target-display" class="text-center mb-6">
                     <p class="text-sm text-gray-400 uppercase tracking-widest mb-1">Target Word</p>
-                    <h2 class="text-4xl md:text-5xl font-black text-white tracking-wider">
+                    
+                    <h2 class="text-3xl md:text-4xl font-black text-white tracking-wider">
                         <span id="target-word" class="text-pink-500">---</span>
                     </h2>
                 </div>
+                
                 <div id="typing-area" class="text-center mb-6">
                     <input type="text" id="typing-input" placeholder="ここに入力..." disabled 
-                           class="w-full max-w-md bg-gray-800 border-2 border-gray-600 text-white text-2xl text-center py-3 px-4 rounded-lg focus:border-amber-500 focus:outline-none transition-colors placeholder-gray-600"
+                           class="w-full max-w-md bg-gray-800 border-2 border-gray-600 text-white text-xl text-center py-3 px-4 rounded-lg focus:border-amber-500 focus:outline-none transition-colors placeholder-gray-600"
                            autocomplete="off" oncontextmenu="return false">
                     <p id="feedback" class="mt-2 text-lg font-bold min-h-[1.5em] text-amber-400"></p>
                 </div>
-                <div class="flex justify-around text-xl font-bold border-t border-white/10 pt-4">
-                    <p>SCORE: <span id="score" class="text-green-400 text-2xl">0</span></p>
-                    <p>TIME: <span id="timer" class="text-red-400 text-2xl">60</span></p>
+                
+                <div class="flex justify-around text-lg font-bold border-t border-white/10 pt-4">
+                    <p>SCORE: <span id="score" class="text-green-400 text-xl">0</span></p>
+                    <p>TIME: <span id="timer" class="text-red-400 text-xl">60</span></p>
                 </div>
             </div>
         </div>
@@ -126,5 +132,15 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
     <script src="../script.js"></script>
+    
+    <script>
+        const hamburger = document.getElementById('hamburgerMenu');
+        const sidebar = document.getElementById('sidebar');
+
+        hamburger.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-full');
+            hamburger.classList.toggle('open');
+        });
+    </script>
 </body>
 </html>
