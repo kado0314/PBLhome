@@ -1,71 +1,47 @@
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseUpload
 from datetime import datetime
-import os
-import io
+import cloudinary
+import cloudinary.uploader
 import base64
 
-# スコープ設定
+# スコープ設定 (スプレッドシート用)
 SCOPE = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
 
-# ▼▼▼ あなたのスプレッドシートID ▼▼▼
+# スプレッドシートID (そのまま)
 SPREADSHEET_KEY = "17QqxdjbY5OM8zGLPcrjn_-d1ZVCifvFH4dp9feOjfDk"
 
-# ▼▼▼ 作成していただいたフォルダIDを設定しました ▼▼▼
-DRIVE_FOLDER_ID = "1vEwJH5G1FyDpO8W2PsdRjkV45MAD6e-G"
-
-def get_creds():
-    return ServiceAccountCredentials.from_json_keyfile_name('credentials.json', SCOPE)
+# ▼▼▼ Cloudinaryの設定 (ダッシュボードを見て書き換えてください) ▼▼▼
+cloudinary.config(
+  cloud_name = "dqluizsxn", 
+  api_key = "733249596838179", 
+  api_secret = "fJ1tto-eIbv19SBQBkI9r5rJb3Q",
+  secure = True
+)
 
 def get_client():
-    creds = get_creds()
+    creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', SCOPE)
     client = gspread.authorize(creds)
     return client
 
-def get_drive_service():
-    creds = get_creds()
-    service = build('drive', 'v3', credentials=creds)
-    return service
-
-def upload_image_to_drive(image_data_base64, filename):
-    """Base64画像をGoogleドライブにアップロードして表示用URLを返す"""
+def upload_image_to_cloudinary(image_data_base64):
+    """Base64画像をCloudinaryにアップロードして表示用URLを返す"""
     try:
-        service = get_drive_service()
+        # Base64ヘッダー(data:image/...)が付いている場合はそのまま渡せます
+        # CloudinaryはBase64文字列を直接アップロード可能です
         
-        # Base64ヘッダーの除去とデコード
-        if ',' in image_data_base64:
-            image_data_base64 = image_data_base64.split(',')[1]
-            
-        image_data = base64.b64decode(image_data_base64)
-        fh = io.BytesIO(image_data)
+        # アップロード実行 (フォルダ分けしたい場合は folder="fashion_ranking" を追加)
+        response = cloudinary.uploader.upload(
+            image_data_base64, 
+            folder="fashion_ranking",
+            resource_type="image"
+        )
         
-        file_metadata = {
-            'name': filename,
-            'parents': [DRIVE_FOLDER_ID]
-        }
-        media = MediaIoBaseUpload(fh, mimetype='image/jpeg', resumable=True)
-        
-        # アップロード実行
-        file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
-        file_id = file.get('id')
-        
-        # 公開設定にする（全員が閲覧可能）
-        permission = {'type': 'anyone', 'role': 'reader'}
-        service.permissions().create(fileId=file_id, body=permission).execute()
-
-        # サムネイルリンクを取得してサイズを大きくするハック
-        file_info = service.files().get(fileId=file_id, fields='thumbnailLink').execute()
-        thumbnail_link = file_info.get('thumbnailLink')
-        
-        if thumbnail_link:
-            # 末尾の=s220などを=s600に変更して大きめの画像を取得
-            return thumbnail_link.rsplit('=', 1)[0] + '=s600'
-        return ""
+        # 安全なHTTPSのURLを返す
+        return response['secure_url']
 
     except Exception as e:
-        print(f"Image Upload Error: {e}")
+        print(f"Cloudinary Upload Error: {e}")
         return ""
 
 def get_ranking():
@@ -92,27 +68,24 @@ def get_ranking():
         return []
 
 def add_ranking_entry(name, score, delete_pass, image_data_base64=None):
-    """ランキングに登録（画像対応）"""
+    """ランキングに登録"""
     try:
         client = get_client()
         sheet = client.open_by_key(SPREADSHEET_KEY).sheet1
         
-        # ヘッダー確認・作成
+        # ヘッダー作成
         if sheet.row_count == 0 or not sheet.row_values(1):
             sheet.append_row(["name", "score", "date", "delete_pass", "image_url"])
         
-        # 既存シートにimage_url列がない場合の対応
+        # 既存ヘッダー対応
         header = sheet.row_values(1)
         if "image_url" not in header:
             sheet.update_cell(1, len(header) + 1, "image_url")
 
-        # 画像アップロード処理
+        # 画像アップロード処理 (Cloudinaryへ)
         image_url = ""
         if image_data_base64:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            # ファイル名に名前を含めてユニークにする
-            filename = f"ranking_{timestamp}_{name}.jpg"
-            image_url = upload_image_to_drive(image_data_base64, filename)
+            image_url = upload_image_to_cloudinary(image_data_base64)
 
         date_str = datetime.now().strftime("%Y-%m-%d")
         
@@ -124,7 +97,7 @@ def add_ranking_entry(name, score, delete_pass, image_data_base64=None):
         return False
 
 def delete_ranking_entry(name, delete_pass):
-    """削除処理（厳密比較版）"""
+    """削除処理"""
     try:
         client = get_client()
         sheet = client.open_by_key(SPREADSHEET_KEY).sheet1
