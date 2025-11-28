@@ -8,6 +8,22 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('scoring.static', filename='css/fashion.css') }}">
+
+    <style>
+        .hamburger-menu span {
+            transition: all 0.3s ease-in-out;
+            transform-origin: center;
+        }
+        .hamburger-menu.open span:nth-child(1) {
+            transform: translateY(10px) rotate(45deg);
+        }
+        .hamburger-menu.open span:nth-child(2) {
+            opacity: 0;
+        }
+        .hamburger-menu.open span:nth-child(3) {
+            transform: translateY(-10px) rotate(-45deg);
+        }
+    </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen relative overflow-x-hidden font-sans">
     
@@ -19,54 +35,59 @@
         <p class="text-sm text-gray-300 mt-2">しばらくそのままお待ちください</p>
     </div>
 
-    <div class="hamburger-menu fixed top-5 left-5 w-9 h-8 cursor-pointer z-[5000] flex flex-col justify-between" id="hamburgerMenu">
-        <span class="block w-full h-1 bg-white rounded transition-all duration-300"></span>
-        <span class="block w-full h-1 bg-white rounded transition-all duration-300"></span>
-        <span class="block w-full h-1 bg-white rounded transition-all duration-300"></span>
+    <div class="hamburger-menu fixed top-5 left-5 w-8 h-6 cursor-pointer z-[5000] flex flex-col justify-between" id="hamburgerMenu">
+        <span class="block w-full h-[3px] bg-white rounded"></span>
+        <span class="block w-full h-[3px] bg-white rounded"></span>
+        <span class="block w-full h-[3px] bg-white rounded"></span>
     </div>
 
     <nav class="sidebar fixed top-0 left-0 w-64 h-full bg-gray-900/95 backdrop-blur-md border-r border-white/10 z-[4000] pt-20 -translate-x-full transition-transform duration-300" id="sidebar">
         <ul>
-            <li><a href="/" class="flex items-center px-6 py-4 text-lg text-white hover:bg-white/10 transition-colors border-b border-white/10"><div style="width:40px; text-align:center;"><i class="fa-solid fa-house fa-lg"></i></div><span class="ml-2 font-bold">ホーム</span></a></li>
-            <li><a href="/scoring/saiten" class="flex items-center px-6 py-4 text-lg text-white hover:bg-white/10 transition-colors border-b border-white/10"><div style="width:40px; text-align:center;"><i class="fa-solid fa-shirt fa-lg text-pink-500"></i></div><span class="ml-2 font-bold">ファッション採点</span></a></li>
-            <li><a href="/Typamera/templates/typing.html" class="flex items-center px-6 py-4 text-lg text-white hover:bg-white/10 transition-colors border-b border-white/10"><div style="width:40px; text-align:center;"><i class="fa-solid fa-keyboard fa-lg text-amber-400"></i></div><span class="ml-2 font-bold">タイピング</span></a></li>
-            <li><a href="/Privacy/index.html" class="flex items-center px-6 py-4 text-lg text-white hover:bg-white/10 transition-colors border-b border-white/10"><div style="width:40px; text-align:center;"><i class="fa-solid fa-video fa-lg text-indigo-500"></i></div><span class="ml-2 font-bold">プライバシーガード</span></a></li>
+            <li>
+                <a href="/" class="flex items-center px-6 py-4 text-lg text-white hover:bg-white/10 transition-colors border-b border-white/10">
+                    <div style="width:40px; text-align:center;"><i class="fa-solid fa-house fa-lg"></i></div>
+                    <span class="ml-2 font-bold">ホーム</span>
+                </a>
+            </li>
+            <li>
+                <a href="/Typamera/templates/typing.html" class="flex items-center px-6 py-4 text-lg text-white hover:bg-white/10 transition-colors border-b border-white/10">
+                    <div style="width:40px; text-align:center;"><i class="fa-solid fa-keyboard fa-lg text-amber-400"></i></div>
+                    <span class="ml-2 font-bold">タイピング</span>
+                </a>
+            </li>
+            <li>
+                <a href="/Privacy/index.html" class="flex items-center px-6 py-4 text-lg text-white hover:bg-white/10 transition-colors border-b border-white/10">
+                    <div style="width:40px; text-align:center;"><i class="fa-solid fa-video fa-lg text-indigo-500"></i></div>
+                    <span class="ml-2 font-bold">プライバシーガード</span>
+                </a>
+            </li>
         </ul>
     </nav>
 
     <div class="container mx-auto px-4 py-8 max-w-2xl flex flex-col items-center">
-        
         <h1 class="text-3xl md:text-4xl font-extrabold mt-10 mb-8 text-pink-400 drop-shadow-lg text-center">
             <i class="fa-solid fa-shirt mr-3"></i>ファッション採点
         </h1>
-        
         <form method="POST" enctype="multipart/form-data" action="{{ url_for('scoring.saiten') }}" class="w-full" id="scoringForm">
-            
             <label class="block text-gray-300 font-bold mb-2"><i class="fa-regular fa-image mr-2"></i>画像をアップロード</label>
-            
             <div class="flex flex-col gap-3 mb-6">
                 <input type="file" name="image_file" accept="image/*" capture="camera" id="imageInput" class="hidden">
                 <label for="imageInput" class="flex items-center justify-center cursor-pointer bg-gray-800 hover:bg-gray-700 border-2 border-dashed border-gray-500 hover:border-pink-500 text-gray-300 font-bold py-3 px-4 rounded-lg transition-all duration-300 group">
                     <i class="fa-solid fa-folder-open mr-2 group-hover:text-pink-400 transition-colors"></i>
                     <span id="fileName">ファイルを選択してください</span>
                 </label>
-                
                 <div class="text-center text-gray-500 my-1">- または -</div>
-
                 <button type="button" id="toggleCameraBtn" class="flex items-center justify-center bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:shadow-pink-500/30 transition-all transform hover:-translate-y-1">
                     <i class="fa-solid fa-camera mr-2"></i><span>カメラ起動</span>
                 </button>
             </div>
-            
             <div id="cameraArea" class="hidden mb-6 p-2 bg-black/50 rounded-xl border border-pink-500/50">
                 <video id="cameraVideo" autoplay playsinline class="w-full rounded-lg mb-3 transform scale-x-[-1]"></video>
                 <button type="button" id="takePhotoBtn" class="w-full bg-pink-600 hover:bg-pink-500 text-white font-bold py-3 rounded-lg shadow transition-colors">
                     <i class="fa-solid fa-camera-retro mr-2"></i>撮影する
                 </button>
             </div>
-            
             <img id="imagePreview" src="" class="w-full rounded-lg hidden mb-8 border-2 border-pink-500/50 shadow-xl">
-
             <div class="mb-8">
                 <label for="intended_scene" class="block text-gray-300 text-sm font-bold mb-2">シーン (TPO)</label>
                 <select name="intended_scene" id="intended_scene" class="bg-gray-800 border border-gray-600 text-white rounded-lg p-3 w-full focus:border-pink-500 outline-none transition-colors text-center text-lg">
@@ -75,7 +96,6 @@
                     <option value="friends" {% if selected_scene == 'friends' %}selected{% endif %}>友達と遊ぶ</option>
                 </select>
             </div>
-
             <button type="submit" id="submitBtn" class="w-full py-4 text-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400 text-white font-extrabold rounded-full shadow-lg hover:shadow-pink-500/50 transition-all transform hover:scale-[1.02] relative overflow-hidden group">
                 <span class="relative z-10 flex items-center justify-center">
                     <i class="fa-solid fa-wand-magic-sparkles mr-3 animate-pulse"></i>採点スタート
@@ -98,9 +118,7 @@
                 <span class="score block text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-rose-300 my-4 drop-shadow-sm">{{ score }}<span class="text-4xl ml-1 text-pink-300">点</span></span>
                 <p class="text-xl mt-2 font-light text-gray-200">{{ recommendation }}</p>
             </div>
-            
             <div class="res-body flex flex-col gap-8 w-full">
-                
                 <div class="rating w-full">
                     <h4 class="text-lg font-bold mb-3 text-pink-300">AIからのフィードバック</h4>
                     <ul class="space-y-2">
@@ -109,7 +127,6 @@
                         {% endfor %}
                     </ul>
                 </div>
-                
                 {% if radar_chart_data %}
                 <div class="chart w-full flex justify-center items-center rounded-lg p-1">
                     <img src="{{ radar_chart_data }}" alt="データバー" class="w-full h-auto drop-shadow-[0_0_15px_rgba(236,72,153,0.2)]">
