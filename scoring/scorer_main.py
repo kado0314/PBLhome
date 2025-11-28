@@ -12,9 +12,11 @@ class FashionScorer:
     def __init__(self, user_locale: str = "ja-JP"):
         self.user_locale = user_locale
         
+        # Render等の環境変数からAPIキーを取得
         GENAI_API_KEY = os.environ.get('GOOGLE_API_KEY')
+        
         if not GENAI_API_KEY:
-            print("Warning: GOOGLE_API_KEY is not set.")
+            print("Warning: GOOGLE_API_KEY is not set in environment variables.")
         else:
             genai.configure(api_key=GENAI_API_KEY)
         
@@ -82,6 +84,9 @@ class FashionScorer:
         """
 
         try:
+            if not self.model:
+                raise Exception("Gemini Model is not initialized.")
+
             response = self.model.generate_content([prompt, img])
             result = json.loads(response.text)
 
