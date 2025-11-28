@@ -13,7 +13,7 @@ SCOPE = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/au
 # スプレッドシートID
 SPREADSHEET_KEY = "17QqxdjbY5OM8zGLPcrjn_-d1ZVCifvFH4dp9feOjfDk"
 
-# Cloudinaryの設定 (環境変数から取得)
+# Cloudinaryの設定
 cloudinary.config(
   cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME"), 
   api_key = os.environ.get("CLOUDINARY_API_KEY"), 
@@ -24,18 +24,15 @@ cloudinary.config(
 def get_client():
     """Google Sheetsの認証クライアントを取得"""
     try:
-        # 環境変数 GOOGLE_CREDENTIALS_JSON から認証情報を読み込む
         creds_json_str = os.environ.get('GOOGLE_CREDENTIALS_JSON')
-        
         if creds_json_str:
             creds_dict = json.loads(creds_json_str)
             creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, SCOPE)
         else:
-            # ローカル環境用フォールバック（credentials.jsonがある場合）
             if os.path.exists('credentials.json'):
                 creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', SCOPE)
             else:
-                raise Exception("Google Credentials not found in Environment Variables or file.")
+                raise Exception("Google Credentials not found.")
 
         client = gspread.authorize(creds)
         return client
@@ -46,15 +43,16 @@ def get_client():
 def upload_image_to_cloudinary(image_data_base64):
     """画像をCloudinaryにアップロード"""
     if not image_data_base64:
+        print("!!! Error: Image data is empty !!!")
         return ""
         
     try:
-        # data URIスキーム (data:image/jpeg;base64,...) がついている場合は除去
-        if ',' in image_data_base64:
-            image_data_base64 = image_data_base64.split(',')[1]
-            
-        # Cloudinaryへアップロード
-        # タイムスタンプ等を付与してユニークにする
+        # ▼▼▼ 修正箇所: data URIスキームは削除してはいけない ▼▼▼
+        # Cloudinaryは `data:image/...` から始まる文字列をBase64画像として認識します。
+        # これを削除するとファイルパス扱いされて [Errno 36] File name too long になります。
+        
+        print(f"Start Uploading... Length: {len(image_data_base64)}")
+
         response = cloudinary.uploader.upload(
             image_data_base64, 
             folder="fashion_ranking",
@@ -63,12 +61,10 @@ def upload_image_to_cloudinary(image_data_base64):
         print(f"Cloudinary Upload Success: {response.get('secure_url')}")
         return response['secure_url']
     except Exception as e:
-        # ここでエラーが出ている可能性が高いので詳細を表示
-        print(f"Cloudinary Upload Error: {e}")
+        print(f"Cloudinary Upload Error Details: {e}")
         return ""
 
 def _delete_image_by_url(image_url):
-    """URLからCloudinaryの画像を削除する内部関数"""
     if not image_url: return
     try:
         filename_with_ext = image_url.split('/')[-1]
@@ -79,9 +75,7 @@ def _delete_image_by_url(image_url):
     except Exception as e:
         print(f"Image Delete Error: {e}")
 
-# ▼▼▼ 入力チェック＆整形関数 ▼▼▼
 def _normalize_str(value):
-    """数値を文字列化し、.0を削除し、空白を除去"""
     if value is None: return ""
     s = str(value).strip()
     if s.endswith(".0"):
@@ -89,33 +83,18 @@ def _normalize_str(value):
     return s
 
 def _is_valid_input(text):
-    """
-    セキュリティチェック:
-    1. 文字と数字のみ許可 (isalnum) -> 記号・スペース禁止
-    2. Excel関数のトリガー文字 (=, +, -, @) で始まっていないか確認
-    """
     s = _normalize_str(text)
     if not s: return False
-    
-    # 関数インジェクション対策
-    if s.startswith(('=', '+', '-', '@')):
-        return False
-        
-    # 文字・数字のみ許可 (日本語OK, 記号NG)
-    if not s.isalnum():
-        return False
-        
+    if s.startswith(('=', '+', '-', '@')): return False
+    if not s.isalnum(): return False
     return True
 
 def get_ranking():
-    """ランキングトップ100を取得"""
     try:
         client = get_client()
         if not client: return []
-
         sheet = client.open_by_key(SPREADSHEET_KEY).sheet1
         records = sheet.get_all_records()
-        
         valid_records = []
         for r in records:
             try:
@@ -124,7 +103,6 @@ def get_ranking():
                 valid_records.append(r)
             except:
                 continue
-
         sorted_records = sorted(valid_records, key=lambda x: x['score'], reverse=True)
         return sorted_records[:100]
     except Exception as e:
@@ -132,42 +110,28 @@ def get_ranking():
         return []
 
 def prune_ranking(sheet):
-    """100位以下を削除するお掃除関数"""
     try:
         records = sheet.get_all_records()
         if len(records) <= 100: return
-
         def get_score(r):
             try: return float(r['score'])
             except: return -1.0
-            
         sorted_records = sorted(records, key=get_score, reverse=True)
         items_to_delete = sorted_records[100:]
-        
-        print(f"--- Pruning: Cleaning up {len(items_to_delete)} items ---")
-
         for item in items_to_delete:
             name = item.get('name')
             delete_pass = item.get('delete_pass')
             delete_ranking_entry(name, delete_pass, sheet)
-            
     except Exception as e:
         print(f"Pruning Error: {e}")
 
 def add_ranking_entry(name, score, delete_pass, image_data_base64=None):
-    """ランキングに登録"""
-    # ▼▼▼ 厳密な入力チェック ▼▼▼
-    if not _is_valid_input(name):
-        print("Invalid Name Format")
-        return False
-    if not _is_valid_input(delete_pass):
-        print("Invalid Password Format")
-        return False
+    if not _is_valid_input(name): return False
+    if not _is_valid_input(delete_pass): return False
 
     try:
         client = get_client()
         if not client: return False
-
         sheet = client.open_by_key(SPREADSHEET_KEY).sheet1
         
         if sheet.row_count == 0 or not sheet.row_values(1):
@@ -178,22 +142,14 @@ def add_ranking_entry(name, score, delete_pass, image_data_base64=None):
             sheet.update_cell(1, len(header) + 1, "image_url")
 
         image_url = ""
-        # Cloudinaryへのアップロード試行
         if image_data_base64:
-            print("Attempting to upload image to Cloudinary...")
             image_url = upload_image_to_cloudinary(image_data_base64)
-            if not image_url:
-                print("Warning: Image upload returned empty URL.")
 
         date_str = datetime.now().strftime("%Y-%m-%d")
-        
-        # 念のため、書き込み時に再度エスケープ処理（文字列として強制）
         clean_name = _normalize_str(name)
         clean_pass = _normalize_str(delete_pass)
         
-        # スプレッドシートに行を追加
         sheet.append_row([clean_name, score, date_str, clean_pass, image_url])
-        
         prune_ranking(sheet)
         return True
     except Exception as e:
@@ -201,10 +157,8 @@ def add_ranking_entry(name, score, delete_pass, image_data_base64=None):
         return False
 
 def delete_ranking_entry(name, delete_pass, sheet_obj=None):
-    """削除処理"""
     try:
-        if sheet_obj:
-            sheet = sheet_obj
+        if sheet_obj: sheet = sheet_obj
         else:
             client = get_client()
             if not client: return False
@@ -214,8 +168,6 @@ def delete_ranking_entry(name, delete_pass, sheet_obj=None):
         deleted = False
         target_name = _normalize_str(name)
         target_pass = _normalize_str(delete_pass)
-
-        print(f"--- Delete Request: Name=[{target_name}], Pass=[{target_pass}] ---")
 
         for i, record in reversed(list(enumerate(records))):
             row_num = i + 2
@@ -227,9 +179,7 @@ def delete_ranking_entry(name, delete_pass, sheet_obj=None):
                 _delete_image_by_url(image_url)
                 sheet.delete_rows(row_num)
                 deleted = True
-                print(f"!!! Deleted Row {row_num} !!!")
                 break
-        
         return deleted
     except Exception as e:
         print(f"Delete Error: {e}")
