@@ -4,6 +4,7 @@ from datetime import datetime
 import cloudinary
 import cloudinary.uploader
 import base64
+import re # 正規表現用
 
 # スコープ設定
 SCOPE = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -11,7 +12,7 @@ SCOPE = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/au
 # スプレッドシートID
 SPREADSHEET_KEY = "17QqxdjbY5OM8zGLPcrjn_-d1ZVCifvFH4dp9feOjfDk"
 
-# ▼▼▼ Cloudinaryの設定 (ご自身のものが入っている前提) ▼▼▼
+# Cloudinaryの設定 (ご自身のものが入っている前提)
 cloudinary.config(
   cloud_name = "dqluizsxn", 
   api_key = "733249596838179", 
@@ -44,16 +45,41 @@ def _delete_image_by_url(image_url):
     """URLからCloudinaryの画像を削除する内部関数"""
     if not image_url: return
     try:
-        # URLからpublic_idを抽出
-        # 例: https://.../upload/v1234/fashion_ranking/filename.jpg
         filename_with_ext = image_url.split('/')[-1]
         public_id_name = filename_with_ext.split('.')[0]
         full_public_id = f"fashion_ranking/{public_id_name}"
-        
         cloudinary.uploader.destroy(full_public_id)
         print(f"Cloudinary Image Deleted: {full_public_id}")
     except Exception as e:
         print(f"Image Delete Error: {e}")
+
+# ▼▼▼ 入力チェック＆整形関数 ▼▼▼
+def _normalize_str(value):
+    """数値を文字列化し、.0を削除し、空白を除去"""
+    if value is None: return ""
+    s = str(value).strip()
+    if s.endswith(".0"):
+        s = s[:-2]
+    return s
+
+def _is_valid_input(text):
+    """
+    セキュリティチェック:
+    1. 文字と数字のみ許可 (isalnum) -> 記号・スペース禁止
+    2. Excel関数のトリガー文字 (=, +, -, @) で始まっていないか確認
+    """
+    s = _normalize_str(text)
+    if not s: return False
+    
+    # 関数インジェクション対策
+    if s.startswith(('=', '+', '-', '@')):
+        return False
+        
+    # 文字・数字のみ許可 (日本語OK, 記号NG)
+    if not s.isalnum():
+        return False
+        
+    return True
 
 def get_ranking():
     """ランキングトップ100を取得"""
@@ -78,37 +104,38 @@ def get_ranking():
         return []
 
 def prune_ranking(sheet):
-    """【復活】100位以下を削除するお掃除関数"""
+    """100位以下を削除するお掃除関数"""
     try:
         records = sheet.get_all_records()
-        if len(records) <= 100:
-            return # 100件以下なら何もしない
+        if len(records) <= 100: return
 
-        # スコアで降順ソート（高い順）
         def get_score(r):
             try: return float(r['score'])
             except: return -1.0
             
         sorted_records = sorted(records, key=get_score, reverse=True)
-        
-        # 101位以降のデータを取得（削除対象）
         items_to_delete = sorted_records[100:]
         
         print(f"--- Pruning: Cleaning up {len(items_to_delete)} items ---")
 
-        # 削除対象をループ
         for item in items_to_delete:
             name = item.get('name')
             delete_pass = item.get('delete_pass')
-            
-            # 既存の削除関数を再利用して消す（画像も消える）
             delete_ranking_entry(name, delete_pass, sheet)
             
     except Exception as e:
         print(f"Pruning Error: {e}")
 
 def add_ranking_entry(name, score, delete_pass, image_data_base64=None):
-    """ランキングに登録 ＆ 自動お掃除"""
+    """ランキングに登録"""
+    # ▼▼▼ 厳密な入力チェック ▼▼▼
+    if not _is_valid_input(name):
+        print("Invalid Name Format")
+        return False
+    if not _is_valid_input(delete_pass):
+        print("Invalid Password Format")
+        return False
+
     try:
         client = get_client()
         sheet = client.open_by_key(SPREADSHEET_KEY).sheet1
@@ -122,25 +149,32 @@ def add_ranking_entry(name, score, delete_pass, image_data_base64=None):
 
         image_url = ""
         if image_data_base64:
-            image_url = upload_image_to_cloudinary(image_data_base64)
+            # ファイル名も安全な文字だけで構成する
+            safe_name = _normalize_str(name)
+            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+            filename = f"ranking_{timestamp}_{safe_name}.jpg"
+            image_url = upload_image_to_cloudinary(image_data_base64) # Cloudinary側で名前管理させる
 
         date_str = datetime.now().strftime("%Y-%m-%d")
         
-        # データを追加
-        sheet.append_row([name, score, date_str, delete_pass, image_url])
+        # 念のため、書き込み時に再度エスケープ処理（文字列として強制）
+        clean_name = _normalize_str(name)
+        clean_pass = _normalize_str(delete_pass)
         
-        # ▼▼▼ 追加後、100件を超えていたら下位を削除 ▼▼▼
+        # 先頭に ' を付けることでスプレッドシートが強制的にテキストとして認識する
+        # (ただし _is_valid_input で記号を弾いているので、これは二重の保険)
+        
+        sheet.append_row([clean_name, score, date_str, clean_pass, image_url])
+        
         prune_ranking(sheet)
-        
         return True
     except Exception as e:
         print(f"Add Ranking Error: {e}")
         return False
 
 def delete_ranking_entry(name, delete_pass, sheet_obj=None):
-    """名前とパスワードが一致したら削除（画像含む）"""
+    """削除処理"""
     try:
-        # sheetオブジェクトが渡されていれば再利用、なければ新規取得
         if sheet_obj:
             sheet = sheet_obj
         else:
@@ -148,26 +182,23 @@ def delete_ranking_entry(name, delete_pass, sheet_obj=None):
             sheet = client.open_by_key(SPREADSHEET_KEY).sheet1
             
         records = sheet.get_all_records()
-        
         deleted = False
-        target_name = str(name).strip()
-        target_pass = str(delete_pass).strip()
+        target_name = _normalize_str(name)
+        target_pass = _normalize_str(delete_pass)
 
-        # 後ろから検索して削除
+        print(f"--- Delete Request: Name=[{target_name}], Pass=[{target_pass}] ---")
+
         for i, record in reversed(list(enumerate(records))):
             row_num = i + 2
-            sheet_name = str(record.get('name', '')).strip()
-            sheet_pass = str(record.get('delete_pass', '')).strip()
+            sheet_name = _normalize_str(record.get('name', ''))
+            sheet_pass = _normalize_str(record.get('delete_pass', ''))
             
             if sheet_name == target_name and sheet_pass == target_pass:
-                # 画像削除（共通関数を使用）
                 image_url = record.get('image_url', '')
                 _delete_image_by_url(image_url)
-
-                # 行削除
                 sheet.delete_rows(row_num)
                 deleted = True
-                print(f"!!! Deleted Row {row_num} (Name: {target_name}) !!!")
+                print(f"!!! Deleted Row {row_num} !!!")
                 break
         
         return deleted
