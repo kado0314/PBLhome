@@ -14,16 +14,19 @@ const hamburger = document.getElementById('hamburgerMenu');
 const sidebar = document.getElementById('sidebar');
 
 // ランキング用
-const showRankingModalBtn = document.getElementById('showRankingModalBtn');
-const rankingModal = document.getElementById('rankingModal');
-const cancelRankBtn = document.getElementById('cancelRankBtn');
-const confirmRankBtn = document.getElementById('confirmRankBtn');
+const openRankingViewBtn = document.getElementById('openRankingViewBtn'); // 新設
+const rankingViewModal = document.getElementById('rankingViewModal');     // 新設
+const closeRankingViewBtn = document.getElementById('closeRankingViewBtn'); // 新設
+const showRegisterModalBtn = document.getElementById('showRegisterModalBtn'); // 名前変更
+const registerModal = document.getElementById('registerModal');           // 名前変更
+const cancelRegisterBtn = document.getElementById('cancelRegisterBtn');   // 名前変更
+const confirmRegisterBtn = document.getElementById('confirmRegisterBtn'); // 名前変更
 const rankingTableBody = document.getElementById('rankingTableBody');
 const deleteEntryBtn = document.getElementById('deleteEntryBtn');
 
 let cameraStream = null;
 
-// ファイル選択
+// ... (カメラ・ファイル関連の既存コードはそのまま) ...
 imageInput.addEventListener('change', function(event) {
     const file = event.target.files[0];
     if (file) {
@@ -41,7 +44,6 @@ imageInput.addEventListener('change', function(event) {
     }
 });
 
-// カメラ制御
 function stopCamera() {
     if (cameraStream) {
         cameraStream.getTracks().forEach(track => track.stop());
@@ -116,21 +118,25 @@ hamburger.addEventListener('click', () => {
 
 // ▼▼▼ ランキング関連処理 ▼▼▼
 
+// ランキングデータ取得
 async function fetchRanking() {
-    if(!rankingTableBody) return;
+    rankingTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">読み込み中...</td></tr>';
     try {
         const res = await fetch('/scoring/api/ranking');
         const data = await res.json();
+        
         rankingTableBody.innerHTML = '';
         if (data.length === 0) {
             rankingTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">データがありません</td></tr>';
             return;
         }
+        
         data.forEach((entry, index) => {
             let rankIcon = `<span class="font-bold text-gray-400">${index + 1}</span>`;
-            if (index === 0) rankIcon = '<i class="fa-solid fa-crown text-yellow-400"></i>';
-            if (index === 1) rankIcon = '<i class="fa-solid fa-crown text-gray-300"></i>';
-            if (index === 2) rankIcon = '<i class="fa-solid fa-crown text-amber-600"></i>';
+            if (index === 0) rankIcon = '<i class="fa-solid fa-crown text-yellow-400 text-xl"></i>';
+            if (index === 1) rankIcon = '<i class="fa-solid fa-crown text-gray-300 text-xl"></i>';
+            if (index === 2) rankIcon = '<i class="fa-solid fa-crown text-amber-600 text-xl"></i>';
+
             const row = `
                 <tr class="border-b border-gray-700 hover:bg-white/5 transition">
                     <td class="px-4 py-3 text-center">${rankIcon}</td>
@@ -147,23 +153,38 @@ async function fetchRanking() {
     }
 }
 
-// ページ読み込み時にランキング取得
-document.addEventListener('DOMContentLoaded', fetchRanking);
-
-if (showRankingModalBtn) {
-    showRankingModalBtn.addEventListener('click', () => {
-        rankingModal.classList.remove('hidden');
+// ① 「ランキングを見る」ボタン
+if (openRankingViewBtn) {
+    openRankingViewBtn.addEventListener('click', () => {
+        rankingViewModal.classList.remove('hidden');
+        fetchRanking(); // 開くたびに最新データを取得
     });
 }
 
-if (cancelRankBtn) {
-    cancelRankBtn.addEventListener('click', () => {
-        rankingModal.classList.add('hidden');
+// ② ランキング閲覧モーダルを閉じる
+if (closeRankingViewBtn) {
+    closeRankingViewBtn.addEventListener('click', () => {
+        rankingViewModal.classList.add('hidden');
     });
 }
 
-if (confirmRankBtn) {
-    confirmRankBtn.addEventListener('click', async () => {
+// ③ 登録ボタン（結果画面）
+if (showRegisterModalBtn) {
+    showRegisterModalBtn.addEventListener('click', () => {
+        registerModal.classList.remove('hidden');
+    });
+}
+
+// ④ 登録キャンセル
+if (cancelRegisterBtn) {
+    cancelRegisterBtn.addEventListener('click', () => {
+        registerModal.classList.add('hidden');
+    });
+}
+
+// ⑤ 登録実行
+if (confirmRegisterBtn) {
+    confirmRegisterBtn.addEventListener('click', async () => {
         const name = document.getElementById('rankName').value;
         const pass = document.getElementById('rankPass').value;
         const scoreElement = document.getElementById('currentScoreValue');
@@ -174,8 +195,8 @@ if (confirmRankBtn) {
         }
         
         const score = scoreElement ? scoreElement.getAttribute('data-score') : 0;
-        confirmRankBtn.disabled = true;
-        confirmRankBtn.textContent = '送信中...';
+        confirmRegisterBtn.disabled = true;
+        confirmRegisterBtn.textContent = '送信中...';
 
         try {
             const res = await fetch('/scoring/api/ranking', {
@@ -183,33 +204,42 @@ if (confirmRankBtn) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: name, score: score, delete_pass: pass })
             });
+            
             const result = await res.json();
             if (result.success) {
                 alert('ランキングに登録しました！');
-                rankingModal.classList.add('hidden');
+                registerModal.classList.add('hidden'); // 登録画面閉じる
+                showRegisterModalBtn.classList.add('hidden'); // ボタン消す
+                
+                // すぐにランキング一覧を表示する
+                rankingViewModal.classList.remove('hidden');
                 fetchRanking();
-                showRankingModalBtn.classList.add('hidden');
+                
             } else {
-                alert('登録に失敗しました');
+                alert('登録に失敗しました: ' + (result.message || '不明なエラー'));
             }
         } catch (e) {
             alert('通信エラーが発生しました');
         } finally {
-            confirmRankBtn.disabled = false;
-            confirmRankBtn.textContent = '同意して登録';
+            confirmRegisterBtn.disabled = false;
+            confirmRegisterBtn.textContent = '同意して登録';
         }
     });
 }
 
+// ⑥ 削除実行
 if (deleteEntryBtn) {
     deleteEntryBtn.addEventListener('click', async () => {
         const name = document.getElementById('delName').value;
         const pass = document.getElementById('delPass').value;
+        
         if(!name || !pass) {
             alert('名前と削除パスを入力してください');
             return;
         }
+        
         if(!confirm(`本当に「${name}」のデータを削除しますか？`)) return;
+
         try {
             const res = await fetch('/scoring/api/ranking/delete', {
                 method: 'POST',
