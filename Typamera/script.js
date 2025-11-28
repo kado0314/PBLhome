@@ -58,32 +58,29 @@ function stopCamera() {
         stream = null;
         webcam.srcObject = null;
     }
-    // Tailwindではhiddenクラスで制御しても良いが、ここはdisplayプロパティで
     webcam.style.display = 'none';
 }
 
+// ▼▼▼ 変更点: ここではカメラを起動せず、モデル読み込みだけ行う ▼▼▼
 async function initializeApp() {
-    statusElement.textContent = 'カメラを起動し、モデルをロード中です...';
+    statusElement.textContent = 'AIモデルをロード中です...';
     startButton.disabled = true;
     detailsButton.disabled = true;
 
     try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        webcam.srcObject = stream;
-        await new Promise(resolve => webcam.onloadedmetadata = resolve);
-
+        // モデルのロードのみ行う
         model = await cocoSsd.load();
         
-        statusElement.textContent = '準備完了！「ゲームスタート」を押してください。';
+        statusElement.textContent = '準備完了！「ゲームスタート」を押してカメラを起動してください。';
         startButton.disabled = false;
         detailsButton.disabled = false;
-        webcam.style.display = 'block'; 
         
+        // モーダルリスト作成
         populateClassList();
         
     } catch (error) {
         console.error('初期化に失敗しました:', error);
-        statusElement.textContent = 'エラー: カメラを許可し、ページをリロードしてください。';
+        statusElement.textContent = 'エラー: モデルの読み込みに失敗しました。リロードしてください。';
     }
 }
 
@@ -110,53 +107,86 @@ function resetGame() {
     detailsButton.disabled = false;
 }
 
-function startGame() {
+// ▼▼▼ 変更点: asyncにし、ここでカメラを起動する ▼▼▼
+async function startGame() {
     if (isGameRunning || !model) return;
-    isGameRunning = true;
     
-    startButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>ゲーム実行中...';
+    // UI更新
+    startButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>カメラ起動中...';
     startButton.disabled = true;
     detailsButton.disabled = true;
-    typingInput.disabled = false;
-    typingInput.focus();
-    webcam.style.display = 'block';
+    statusElement.textContent = 'カメラを起動しています...';
 
-    gameInterval = setInterval(() => {
-        time--;
-        timerElement.textContent = time;
-        if (time <= 0) {
-            endGame();
-        }
-    }, 1000);
-    
-    detectionInterval = setInterval(detectObjects, 3000);
-    detectObjects(true);
-    statusElement.textContent = 'ゲーム開始！カメラに映るものを入力してください。';
+    // カメラ起動処理
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        webcam.srcObject = stream;
+        
+        // メタデータ読み込み待ち
+        await new Promise(resolve => webcam.onloadedmetadata = resolve);
+        webcam.play();
+        webcam.style.display = 'block'; 
+
+        // ゲーム開始フラグON
+        isGameRunning = true;
+        startButton.innerHTML = '<i class="fa-solid fa-gamepad mr-2"></i>ゲーム中';
+        statusElement.textContent = 'ゲーム開始！カメラに映るものを入力してください。';
+        
+        typingInput.disabled = false;
+        typingInput.focus();
+
+        // タイマースタート
+        gameInterval = setInterval(() => {
+            time--;
+            timerElement.textContent = time;
+            if (time <= 0) {
+                endGame();
+            }
+        }, 1000);
+        
+        // 検出スタート
+        detectionInterval = setInterval(detectObjects, 3000);
+        detectObjects(true);
+
+    } catch (err) {
+        console.error(err);
+        statusElement.textContent = "カメラの起動に失敗しました。許可設定を確認してください。";
+        startButton.textContent = 'ゲームスタート';
+        startButton.disabled = false;
+        detailsButton.disabled = false;
+    }
 }
 
 // --- 3. 物体検出 ---
 async function detectObjects(forceNewWord = false) {
-    if (!model || !stream) return;
+    if (!model || !stream || !isGameRunning) return; // ゲーム中以外は検出しない
 
-    const predictions = await model.detect(webcam);
-    
-    const detectedClasses = predictions
-        .filter(p => p.score > 0.6 && ALLOWED_CLASSES.includes(p.class))
-        .map(p => p.class);
+    // 映像が準備できているか確認
+    if (webcam.readyState !== 4) return;
 
-    if (detectedClasses.length > 0) {
-        statusElement.textContent = `${detectedClasses.length}種類のお題候補を検出しました。`;
+    try {
+        const predictions = await model.detect(webcam);
         
-        if (forceNewWord || targetWord === '---' || !detectedClasses.includes(targetWord)) {
-            setNewTargetWord(detectedClasses);
-            isTargetLocked = true;
+        const detectedClasses = predictions
+            .filter(p => p.score > 0.6 && ALLOWED_CLASSES.includes(p.class))
+            .map(p => p.class);
+
+        if (detectedClasses.length > 0) {
+            statusElement.textContent = `${detectedClasses.length}種類のお題候補を検出しました。`;
+            
+            if (forceNewWord || targetWord === '---' || !detectedClasses.includes(targetWord)) {
+                setNewTargetWord(detectedClasses);
+                isTargetLocked = true;
+            }
+        } else {
+            statusElement.textContent = 'お題が見つかりません。カメラに何か映してください。';
+            if (targetWord !== '---') {
+                targetWord = '---';
+                targetWordElement.textContent = targetWord;
+            }
         }
-    } else {
-        statusElement.textContent = 'お題が見つかりません。カメラに何か映してください。';
-        if (targetWord !== '---') {
-            targetWord = '---';
-            targetWordElement.textContent = targetWord;
-        }
+    } catch (e) {
+        console.log("Detection error", e);
     }
 }
 
@@ -183,7 +213,7 @@ function setNewTargetWord(detectedClasses) {
 // --- 5. タイピング処理 ---
 typingInput.addEventListener('input', () => {
     if (targetWord === '---' || !isGameRunning) return;
-    const typedText = typingInput.value.toLowerCase().trim(); // 空白削除と小文字化
+    const typedText = typingInput.value.toLowerCase().trim();
     
     if (typedText === targetWord) {
         score++;
@@ -213,9 +243,15 @@ typingInput.addEventListener('keydown', (e) => {
 
 // --- 6. ゲーム終了 ---
 function endGame() {
+    // ▼▼▼ 変更点: ゲーム終了時にカメラを停止する ▼▼▼
+    stopCamera();
+    
     statusElement.textContent = `Finish! Score: ${score}`;
-    alert(`ゲーム終了！あなたのスコアは ${score}点です。`);
-    resetGame();
+    // 少し遅らせてアラートを出す（画面更新を待つため）
+    setTimeout(() => {
+        alert(`ゲーム終了！あなたのスコアは ${score}点です。`);
+        resetGame();
+    }, 100);
 }
 
 // --- 7. イベントリスナー ---
@@ -255,13 +291,11 @@ window.addEventListener('click', (event) => {
     }
 });
 
-
-// ▼▼▼ ハンバーガーメニュー制御 (Tailwind対応) ▼▼▼
+// ▼▼▼ ハンバーガーメニュー制御 ▼▼▼
 const hamburger = document.getElementById('hamburgerMenu');
 const sidebar = document.getElementById('sidebar');
 
 hamburger.addEventListener('click', () => {
-    // Tailwindの -translate-x-full クラスをトグルすることで出し入れ
     sidebar.classList.toggle('-translate-x-full');
     hamburger.classList.toggle('open');
 });
