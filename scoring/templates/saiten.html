@@ -79,7 +79,9 @@
                     <i class="fa-solid fa-camera-retro mr-2"></i>撮影する
                 </button>
             </div>
+            
             <img id="imagePreview" src="" class="w-full rounded-lg hidden mb-8 border-2 border-pink-500/50 shadow-xl">
+            
             <div class="mb-8">
                 <label for="intended_scene" class="block text-gray-300 text-sm font-bold mb-2">シーン (TPO)</label>
                 <select name="intended_scene" id="intended_scene" class="bg-gray-800 border border-gray-600 text-white rounded-lg p-3 w-full focus:border-pink-500 outline-none transition-colors text-center text-lg">
@@ -97,7 +99,7 @@
         {% if uploaded_image_data %}
         <div class="target fade-in w-full mt-8">
             <h3 class="text-xl font-bold mb-4 text-white"><i class="fa-solid fa-crosshairs mr-2 text-pink-400"></i>採点対象</h3>
-            <img src="{{ uploaded_image_data }}" class="w-full rounded-lg border-2 border-pink-500 shadow-lg">
+            <img id="resultImage" src="{{ uploaded_image_data }}" class="w-full rounded-lg border-2 border-pink-500 shadow-lg">
         </div>
         {% endif %}
 
