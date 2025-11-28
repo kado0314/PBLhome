@@ -4,7 +4,8 @@ from datetime import datetime
 import cloudinary
 import cloudinary.uploader
 import base64
-import re # 正規表現用
+import os
+import json
 
 # スコープ設定
 SCOPE = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -12,32 +13,57 @@ SCOPE = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/au
 # スプレッドシートID
 SPREADSHEET_KEY = "17QqxdjbY5OM8zGLPcrjn_-d1ZVCifvFH4dp9feOjfDk"
 
-# Cloudinaryの設定 (ご自身のものが入っている前提)
+# Cloudinaryの設定 (環境変数から取得)
 cloudinary.config(
-  cloud_name = "dqluizsxn", 
-  api_key = "733249596838179", 
-  api_secret = "fJ1tto-eIbv19SBQBkI9r5rJb3Q",
+  cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME"), 
+  api_key = os.environ.get("CLOUDINARY_API_KEY"), 
+  api_secret = os.environ.get("CLOUDINARY_API_SECRET"),
   secure = True
 )
 
 def get_client():
-    creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', SCOPE)
-    client = gspread.authorize(creds)
-    return client
+    """Google Sheetsの認証クライアントを取得"""
+    try:
+        # 環境変数 GOOGLE_CREDENTIALS_JSON から認証情報を読み込む
+        creds_json_str = os.environ.get('GOOGLE_CREDENTIALS_JSON')
+        
+        if creds_json_str:
+            creds_dict = json.loads(creds_json_str)
+            creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, SCOPE)
+        else:
+            # ローカル環境用フォールバック（credentials.jsonがある場合）
+            if os.path.exists('credentials.json'):
+                creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', SCOPE)
+            else:
+                raise Exception("Google Credentials not found in Environment Variables or file.")
+
+        client = gspread.authorize(creds)
+        return client
+    except Exception as e:
+        print(f"Authentication Error: {e}")
+        return None
 
 def upload_image_to_cloudinary(image_data_base64):
     """画像をCloudinaryにアップロード"""
+    if not image_data_base64:
+        return ""
+        
     try:
+        # data URIスキーム (data:image/jpeg;base64,...) がついている場合は除去
         if ',' in image_data_base64:
             image_data_base64 = image_data_base64.split(',')[1]
             
+        # Cloudinaryへアップロード
+        # タイムスタンプ等を付与してユニークにする
         response = cloudinary.uploader.upload(
             image_data_base64, 
             folder="fashion_ranking",
             resource_type="image"
         )
+        print(f"Cloudinary Upload Success: {response.get('secure_url')}")
         return response['secure_url']
     except Exception as e:
+        # ここでエラーが出ている可能性が高いので詳細を表示
         print(f"Cloudinary Upload Error: {e}")
         return ""
 
@@ -85,6 +111,8 @@ def get_ranking():
     """ランキングトップ100を取得"""
     try:
         client = get_client()
+        if not client: return []
+
         sheet = client.open_by_key(SPREADSHEET_KEY).sheet1
         records = sheet.get_all_records()
         
@@ -138,6 +166,8 @@ def add_ranking_entry(name, score, delete_pass, image_data_base64=None):
 
     try:
         client = get_client()
+        if not client: return False
+
         sheet = client.open_by_key(SPREADSHEET_KEY).sheet1
         
         if sheet.row_count == 0 or not sheet.row_values(1):
@@ -148,12 +178,12 @@ def add_ranking_entry(name, score, delete_pass, image_data_base64=None):
             sheet.update_cell(1, len(header) + 1, "image_url")
 
         image_url = ""
+        # Cloudinaryへのアップロード試行
         if image_data_base64:
-            # ファイル名も安全な文字だけで構成する
-            safe_name = _normalize_str(name)
-            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-            filename = f"ranking_{timestamp}_{safe_name}.jpg"
-            image_url = upload_image_to_cloudinary(image_data_base64) # Cloudinary側で名前管理させる
+            print("Attempting to upload image to Cloudinary...")
+            image_url = upload_image_to_cloudinary(image_data_base64)
+            if not image_url:
+                print("Warning: Image upload returned empty URL.")
 
         date_str = datetime.now().strftime("%Y-%m-%d")
         
@@ -161,9 +191,7 @@ def add_ranking_entry(name, score, delete_pass, image_data_base64=None):
         clean_name = _normalize_str(name)
         clean_pass = _normalize_str(delete_pass)
         
-        # 先頭に ' を付けることでスプレッドシートが強制的にテキストとして認識する
-        # (ただし _is_valid_input で記号を弾いているので、これは二重の保険)
-        
+        # スプレッドシートに行を追加
         sheet.append_row([clean_name, score, date_str, clean_pass, image_url])
         
         prune_ranking(sheet)
@@ -179,6 +207,7 @@ def delete_ranking_entry(name, delete_pass, sheet_obj=None):
             sheet = sheet_obj
         else:
             client = get_client()
+            if not client: return False
             sheet = client.open_by_key(SPREADSHEET_KEY).sheet1
             
         records = sheet.get_all_records()
