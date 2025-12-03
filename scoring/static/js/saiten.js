@@ -162,23 +162,17 @@ async function fetchRanking() {
 
 // ページ読み込み時の処理
 document.addEventListener('DOMContentLoaded', () => {
-    // ランキング取得
     fetchRanking();
 
-    // ▼▼▼ 追加: 採点結果（スコア）があればそこまでスクロール ▼▼▼
+    // ▼▼▼ 修正: 点数要素そのものを画面の真ん中に持ってくる ▼▼▼
     const scoreElement = document.getElementById('currentScoreValue');
     if (scoreElement) {
-        // 結果エリア全体を取得
-        const resultsContainer = scoreElement.closest('.results');
-        if (resultsContainer) {
-            // 少し遅らせてからスクロール（アニメーション等が落ち着くのを待つ）
-            setTimeout(() => {
-                resultsContainer.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'center' // 画面の真ん中に来るように
-                });
-            }, 300);
-        }
+        setTimeout(() => {
+            scoreElement.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' // 要素を画面中央に配置
+            });
+        }, 300);
     }
 });
 
