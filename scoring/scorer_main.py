@@ -21,7 +21,7 @@ class FashionScorer:
             genai.configure(api_key=GENAI_API_KEY)
         
         # モデル設定
-        MODEL_NAME = "gemini-2.0-flash"
+        MODEL_NAME = "gemini-2.5-flash"
         generation_config = {
             "temperature": 1,
             "response_mime_type": "application/json",
@@ -57,11 +57,19 @@ class FashionScorer:
 
         # ▼▼▼ プロンプトの強化（3つのポイントと数値を強制） ▼▼▼
         prompt = f"""
-        あなたはプロのファッションスタイリストです。画像を分析し、JSON形式で採点してください。
-        良い点と改善点は必ず入れてください。
+        あなたはプロのファッションスタイリスト兼、厳格な審査員です。画像を分析し、JSON形式で採点してください。
+        
+        【採点ルール・重要】
+        1. **点数のバラつきを重視してください**: 多くの画像が「70点前後」になりがちですが、本気で採点してください。
+        2. **基準点**: 「普通の着こなし」を50点（または各項目の半分の点数）としてください。
+           - 素晴らしい場合: 躊躇なく高得点（90以上/満点近く）を付けてください。
+           - 改善が必要な場合: 躊躇なく低得点（30点以下など）を付けてください。
+        3. **シーン適合性**: 想定シーン「{intended_scene}」と服装が合っていない場合は、大幅に減点してください。
+        
         想定シーン: {intended_scene}
 
-        【重要】必ず以下のJSON形式を守ってください。
+        【出力形式】
+        以下のJSON形式のみを出力してください。Markdownのコードブロックは不要です。
         {{
             "total_score": (0-100の整数),
             "recommendation": "(一言コメント)",
