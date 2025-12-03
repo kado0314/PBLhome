@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAMERAPP</title>
+    <title>アプリポータル</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;500;800&display=swap" rel="stylesheet">
@@ -17,7 +17,6 @@
             padding: 0;
         }
 
-        /* Custom utility for absolute centering */
         .absolute-center {
             position: absolute;
             top: 50%;
@@ -25,7 +24,6 @@
             transform: translate(-50%, -50%);
         }
 
-        /* Background Gradient Blur Blob */
         .bg-blob {
             position: absolute;
             border-radius: 50%;
@@ -35,13 +33,11 @@
             transition: background-color 1s ease;
         }
 
-        /* Main visual styling to mimic the 'Cans' */
         .hero-visual {
             filter: drop-shadow(0 20px 30px rgba(0,0,0,0.3));
             transition: color 0.5s ease;
         }
 
-        /* Navigation Buttons */
         .nav-btn {
             transition: all 0.3s ease;
             backdrop-filter: blur(5px);
@@ -54,12 +50,10 @@
             transform: scale(0.95);
         }
 
-        /* Floating animation helper class */
         .floating {
             will-change: transform;
         }
 
-        /* Visit Button styling */
         .visit-btn {
             position: relative;
             overflow: hidden;
@@ -79,10 +73,9 @@
             left: 100%;
         }
 
-        /* ▼▼▼ 追加: sm:text-6xl のサイズ調整 ▼▼▼ */
         @media (min-width: 640px) {
             .sm\:text-6xl {
-                font-size: 3.3rem !important; /* !importantをつけてTailwindのデフォルトより優先させます */
+                font-size: 3.3rem !important;
                 line-height: 1;
             }
         }
@@ -138,7 +131,7 @@
             </div>
         </div>
 
-        <div class="absolute bottom-10 w-full flex justify-center md:justify-end px-10 gap-6 z-20">
+        <div class="absolute bottom-10 w-full hidden sm:flex justify-center md:justify-end px-10 gap-6 z-20">
             <button id="prevBtn" class="nav-btn w-16 h-16 rounded-full border border-white/30 flex items-center justify-center text-xl bg-white/10 hover:bg-white/20">
                 <i class="fa-solid fa-chevron-left"></i>
             </button>
@@ -151,7 +144,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
     <script>
-        // --- Data Configuration ---
         const slides = [
             {
                 id: "saiten",
@@ -159,19 +151,19 @@
                 bgText: "FASHION",
                 desc: "AIがあなたのコーディネートを瞬時に採点。客観的なスコアで、毎日のファッション選びをもっと楽しく。",
                 url: "/scoring/saiten",
-                color: "#ec4899", // pink-500
-                darkColor: "#831843", // pink-900
+                color: "#ec4899",
+                darkColor: "#831843",
                 icon: "fa-shirt",
                 particles: ["fa-gem", "fa-tag", "fa-star"]
             },
             {
                 id: "playground",
-                title: "プライバシーガード",
+                title: "背後検知システム",
                 bgText: "SECURITY",
                 desc: "Webカメラを活用した防犯システム。背後に人が近づいたことを検知し、即座に通知画面でお知らせします。",
-                url: "Privacy/index.html",
-                color: "#6366f1", // indigo-500
-                darkColor: "#312e81", // indigo-900
+                url: "/Privacy/index.html",
+                color: "#6366f1",
+                darkColor: "#312e81",
                 icon: "fa-video",
                 particles: ["fa-eye", "fa-bell", "fa-user-shield"]
             },
@@ -180,9 +172,9 @@
                 title: "タイピング",
                 bgText: "TYPING",
                 desc: "カメラ機能と連動した究極のタイピングゲーム。スピードと正確性が試されます。",
-                url: "Typamera/templates/typing.html",
-                color: "#fbbf24", // amber-400
-                darkColor: "#78350f", // amber-900
+                url: "/Typamera/templates/typing.html",
+                color: "#fbbf24",
+                darkColor: "#78350f",
                 icon: "fa-keyboard",
                 particles: ["fa-bolt", "fa-font", "fa-stopwatch"]
             }
@@ -191,7 +183,6 @@
         let currentIndex = 0;
         let isAnimating = false;
 
-        // --- DOM Elements ---
         const bgBlob = document.getElementById('bgBlob');
         const bgText = document.getElementById('bgText');
         const slideTitle = document.getElementById('slideTitle');
@@ -200,37 +191,17 @@
         const heroVisual = document.getElementById('heroVisual');
         const nextBtn = document.getElementById('nextBtn');
         const prevBtn = document.getElementById('prevBtn');
-        const particleContainer = document.getElementById('particles');
 
-        // --- Init ---
         function init() {
-            updateSlide(0, 1); // Direction 1 = forward
+            updateSlide(0, 1);
             startFloatingAnimation();
         }
 
-        // --- Animation Functions ---
-        
         function startFloatingAnimation() {
-            // Main Hero Float
-            gsap.to("#heroVisual", {
-                y: -30,
-                rotation: 5,
-                duration: 2.5,
-                yoyo: true,
-                repeat: -1,
-                ease: "sine.inOut"
-            });
-
-            // Particles Float (Randomized)
+            gsap.to("#heroVisual", { y: -30, rotation: 5, duration: 2.5, yoyo: true, repeat: -1, ease: "sine.inOut" });
             gsap.utils.toArray(".particle").forEach(part => {
                 gsap.to(part, {
-                    x: "random(-50, 50)",
-                    y: "random(-50, 50)",
-                    rotation: "random(-180, 180)",
-                    duration: "random(3, 6)",
-                    yoyo: true,
-                    repeat: -1,
-                    ease: "sine.inOut"
+                    x: "random(-50, 50)", y: "random(-50, 50)", rotation: "random(-180, 180)", duration: "random(3, 6)", yoyo: true, repeat: -1, ease: "sine.inOut"
                 });
             });
         }
@@ -238,137 +209,57 @@
         function changeSlide(direction) {
             if (isAnimating) return;
             isAnimating = true;
-
             let nextIndex = currentIndex + direction;
             if (nextIndex >= slides.length) nextIndex = 0;
             if (nextIndex < 0) nextIndex = slides.length - 1;
 
-            // 1. Animate OUT
             const tl = gsap.timeline({
                 onComplete: () => {
                     currentIndex = nextIndex;
                     updateSlide(nextIndex, direction);
                 }
             });
-
-            // Hero shoots up or down
-            tl.to("#heroVisual", {
-                y: direction > 0 ? -window.innerHeight : window.innerHeight,
-                rotation: direction > 0 ? -45 : 45,
-                opacity: 0,
-                duration: 0.6,
-                ease: "power3.in"
-            }, 0);
-
-            // Text slides away
-            tl.to(".slide-element", {
-                x: direction > 0 ? -100 : 100,
-                opacity: 0,
-                duration: 0.4,
-                stagger: 0.05
-            }, 0);
-
-            // Background text fades
-            tl.to("#bgText", {
-                scale: 1.5,
-                opacity: 0,
-                duration: 0.5
-            }, 0);
+            tl.to("#heroVisual", { y: direction > 0 ? -window.innerHeight : window.innerHeight, rotation: direction > 0 ? -45 : 45, opacity: 0, duration: 0.6, ease: "power3.in" }, 0);
+            tl.to(".slide-element", { x: direction > 0 ? -100 : 100, opacity: 0, duration: 0.4, stagger: 0.05 }, 0);
+            tl.to("#bgText", { scale: 1.5, opacity: 0, duration: 0.5 }, 0);
         }
 
         function updateSlide(index, direction) {
             const data = slides[index];
-
-            // Update Content
             slideTitle.innerText = data.title;
             slideDesc.innerText = data.desc;
             bgText.innerText = data.bgText;
             visitLink.href = data.url;
-            
-            // Update Colors
             heroVisual.style.color = data.color;
             bgBlob.style.backgroundColor = data.color;
             document.body.style.background = `radial-gradient(circle at center, ${data.darkColor}, #111827)`;
-            
-            // Update Icon
             heroVisual.innerHTML = `<i class="fa-solid ${data.icon}"></i>`;
 
-            // Update Particles
             const particles = document.querySelectorAll('.particle');
             particles.forEach((p, i) => {
-                // Reset classes
                 p.className = `fa-solid ${data.particles[i % data.particles.length]} absolute text-4xl opacity-20 particle`;
-                // Randomize position slightly for freshness
                 p.style.top = Math.random() * 80 + 10 + "%";
                 p.style.left = Math.random() * 80 + 10 + "%";
             });
 
-            // 2. Animate IN
             const tl = gsap.timeline({
                 onComplete: () => {
                     isAnimating = false;
-                    // Re-initiate floating specifically for the new hero (resetting transforms)
-                    gsap.fromTo("#heroVisual", 
-                        { y: 0, rotation: 0 },
-                        { y: -30, rotation: 5, duration: 2.5, yoyo: true, repeat: -1, ease: "sine.inOut" }
-                    );
+                    gsap.fromTo("#heroVisual", { y: 0, rotation: 0 }, { y: -30, rotation: 5, duration: 2.5, yoyo: true, repeat: -1, ease: "sine.inOut" });
                 }
             });
-
-            // Hero falls in
-            tl.fromTo("#heroVisual", 
-                { 
-                    y: direction > 0 ? window.innerHeight : -window.innerHeight,
-                    x: 0,
-                    rotation: direction > 0 ? 45 : -45,
-                    opacity: 0 
-                },
-                { 
-                    y: 0, 
-                    rotation: 0,
-                    opacity: 1, 
-                    duration: 1, 
-                    ease: "elastic.out(1, 0.6)" 
-                }
-            );
-
-            // Text slides in
-            tl.fromTo(".slide-element",
-                { 
-                    x: direction > 0 ? 50 : -50, 
-                    opacity: 0 
-                },
-                { 
-                    x: 0, 
-                    opacity: 1, 
-                    duration: 0.5, 
-                    stagger: 0.1, 
-                    ease: "power2.out" 
-                }, 
-                "-=0.8"
-            );
-
-            // BG Text zooms in
-            tl.fromTo("#bgText",
-                { scale: 0.5, opacity: 0 },
-                { scale: 1, opacity: 0.1, duration: 0.8, ease: "back.out(1.7)" },
-                "-=0.8"
-            );
+            tl.fromTo("#heroVisual", { y: direction > 0 ? window.innerHeight : -window.innerHeight, x: 0, rotation: direction > 0 ? 45 : -45, opacity: 0 }, { y: 0, rotation: 0, opacity: 1, duration: 1, ease: "elastic.out(1, 0.6)" });
+            tl.fromTo(".slide-element", { x: direction > 0 ? 50 : -50, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "power2.out" }, "-=0.8");
+            tl.fromTo("#bgText", { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 0.1, duration: 0.8, ease: "back.out(1.7)" }, "-=0.8");
         }
 
-        // --- Event Listeners ---
         nextBtn.addEventListener('click', () => changeSlide(1));
         prevBtn.addEventListener('click', () => changeSlide(-1));
-
-        // Keyboard navigation
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowRight') changeSlide(1);
             if (e.key === 'ArrowLeft') changeSlide(-1);
         });
-
-        // Initial Start
         init();
-
     </script>
 </body>
 </html>
