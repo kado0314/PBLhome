@@ -108,10 +108,17 @@
                 <span class="score block text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-rose-300 my-4 drop-shadow-sm" id="currentScoreValue" data-score="{{ score }}">{{ score }}<span class="text-4xl ml-1 text-pink-300">点</span></span>
                 <p class="text-xl mt-2 font-light text-gray-200">{{ recommendation }}</p>
                 
-                <button id="showRegisterModalBtn" class="mt-6 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-black font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:-translate-y-1">
+                {% if rank_in %}
+                <div class="mt-8 animate-bounce">
+                    <span class="bg-yellow-500 text-black font-bold px-4 py-1 rounded-full text-sm shadow-lg mb-2 inline-block">
+                        <i class="fa-solid fa-crown mr-1"></i>TOP10 ランクイン！
+                    </span>
+                </div>
+                <button id="showRegisterModalBtn" class="mt-2 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-black font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:-translate-y-1">
                     <i class="fa-solid fa-trophy mr-2"></i>ランキングに登録する
                 </button>
-            </div>
+                {% endif %}
+                </div>
             
             <div class="res-body flex flex-col gap-8 w-full">
                 <div class="rating w-full">
