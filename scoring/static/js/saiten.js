@@ -116,7 +116,7 @@ hamburger.addEventListener('click', () => {
     hamburger.classList.toggle('open');
 });
 
-// ▼▼▼ ランキング関連 ▼▼▼
+// ▼▼▼ ランキング関連＆スクロール処理 ▼▼▼
 
 async function fetchRanking() {
     if(!rankingTableBody) return;
@@ -136,10 +136,8 @@ async function fetchRanking() {
             if (index === 1) rankIcon = '<i class="fa-solid fa-crown text-gray-300 text-xl"></i>';
             if (index === 2) rankIcon = '<i class="fa-solid fa-crown text-amber-600 text-xl"></i>';
 
-            // 画像セルの生成
             let imageCell = '<span class="text-gray-600">-</span>';
             if (entry.image_url) {
-                // サムネイル表示
                 imageCell = `<a href="${entry.image_url}" target="_blank">
                                 <img src="${entry.image_url}" alt="img" class="w-16 h-16 object-cover rounded-lg border border-gray-700 hover:border-pink-500 transition">
                              </a>`;
@@ -162,7 +160,27 @@ async function fetchRanking() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', fetchRanking);
+// ページ読み込み時の処理
+document.addEventListener('DOMContentLoaded', () => {
+    // ランキング取得
+    fetchRanking();
+
+    // ▼▼▼ 追加: 採点結果（スコア）があればそこまでスクロール ▼▼▼
+    const scoreElement = document.getElementById('currentScoreValue');
+    if (scoreElement) {
+        // 結果エリア全体を取得
+        const resultsContainer = scoreElement.closest('.results');
+        if (resultsContainer) {
+            // 少し遅らせてからスクロール（アニメーション等が落ち着くのを待つ）
+            setTimeout(() => {
+                resultsContainer.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' // 画面の真ん中に来るように
+                });
+            }, 300);
+        }
+    }
+});
 
 if (openRankingViewBtn) {
     openRankingViewBtn.addEventListener('click', () => {
@@ -189,29 +207,25 @@ if (cancelRegisterBtn) {
     });
 }
 
-// ▼▼▼ 登録処理（ここが一番重要です） ▼▼▼
 if (confirmRegisterBtn) {
     confirmRegisterBtn.addEventListener('click', async () => {
         const name = document.getElementById('rankName').value;
         const pass = document.getElementById('rankPass').value;
         const scoreElement = document.getElementById('currentScoreValue');
         
-        // ▼ 修正箇所: id="resultImage" を使って確実に画像を取得 ▼
         const resultImage = document.getElementById('resultImage');
         let imageData = null;
         if (resultImage) {
             imageData = resultImage.src;
         } else {
-            console.error("採点画像が見つかりませんでした (id='resultImage')");
+            console.error("画像が見つかりません (id='resultImage' missing)");
         }
-        // ▲ 修正ここまで ▲
 
         if (!name) {
             alert('ニックネームを入力してください');
             return;
         }
 
-        // 入力チェック (記号禁止)
         const validPattern = /^[a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]+$/;
         if (!validPattern.test(name)) {
             alert('ニックネームには「文字」と「数字」のみ使用できます。\n（記号やスペースは使えません）');
@@ -242,12 +256,11 @@ if (confirmRegisterBtn) {
             if (result.success) {
                 alert('ランキングに登録しました！');
                 registerModal.classList.add('hidden');
-                // 条件付きボタンなので存在チェックしてから隠す
                 if(showRegisterModalBtn) showRegisterModalBtn.classList.add('hidden');
                 rankingViewModal.classList.remove('hidden');
                 fetchRanking();
             } else {
-                alert('登録に失敗しました: ' + (result.message || '不明なエラー'));
+                alert('登録に失敗しました: ' + (result.message || '入力内容を確認してください'));
             }
         } catch (e) {
             alert('通信エラーが発生しました');
