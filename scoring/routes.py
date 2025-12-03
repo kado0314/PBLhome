@@ -5,14 +5,14 @@ from .chart_generator import generate_radar_chart
 import sys
 import os
 
-# ranking_managerをインポート
+# ranking_managerのある親ディレクトリをパスに追加
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 try:
     from ranking_manager import get_ranking, add_ranking_entry, delete_ranking_entry
 except ImportError:
-    # 開発環境用ダミー
+    # ローカル開発などでファイルがない場合のダミー
     def get_ranking(): return []
-    def add_ranking_entry(n, s, d, i=None): return False
+    def add_ranking_entry(n, s, d, i=None): return False, "Module Error"
     def delete_ranking_entry(n, d): return False
 
 scoring_bp = Blueprint(
@@ -66,15 +66,30 @@ def saiten():
         }
 
     radar_chart_data = generate_radar_chart(aspect_scores)
+    
+    user_score = result.get("overall_score", 0)
+
+    # ▼▼▼ ランクイン判定ロジック ▼▼▼
+    ranking = get_ranking()
+    rank_in = False
+    
+    if len(ranking) < 10:
+        rank_in = True
+    else:
+        # 10位（リストの最後）のスコアより高ければランクイン
+        lowest_score = ranking[-1]['score']
+        if user_score >= lowest_score:
+            rank_in = True
 
     return render_template(
         "saiten.html",
         uploaded_image_data=f"data:image/png;base64,{image_data}",
-        score=result.get("overall_score", "N/A"),
+        score=user_score,
         recommendation=result.get("recommendation", ""),
         feedback=result.get("explanations", ["詳細な説明はありません。"]),
         radar_chart_data=radar_chart_data,
-        selected_scene=intended_scene
+        selected_scene=intended_scene,
+        rank_in=rank_in  # ▼ これをHTMLに渡す
     )
 
 # ▼▼▼ ランキング用API ▼▼▼
@@ -96,12 +111,13 @@ def api_add_ranking():
     if not name or score is None:
         return jsonify({"success": False, "message": "データが不足しています"}), 400
         
-    # 画像データも含めて登録関数へ
-    success = add_ranking_entry(name, float(score), delete_pass, image_data)
+    # 戻り値 (success, message) を受け取る
+    success, msg = add_ranking_entry(name, float(score), delete_pass, image_data)
+    
     if success:
-        return jsonify({"success": True})
+        return jsonify({"success": True, "message": msg})
     else:
-        return jsonify({"success": False, "message": "登録に失敗しました"}), 500
+        return jsonify({"success": False, "message": msg}), 400
 
 @scoring_bp.route("/api/ranking/delete", methods=["POST"])
 def api_delete_ranking():
