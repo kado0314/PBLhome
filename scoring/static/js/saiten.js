@@ -7,6 +7,7 @@ const toggleCameraBtn = document.getElementById('toggleCameraBtn');
 const cameraArea = document.getElementById('cameraArea');
 const cameraVideo = document.getElementById('cameraVideo');
 const takePhotoBtn = document.getElementById('takePhotoBtn');
+const switchCameraBtn = document.getElementById('switchCameraBtn'); // 追加
 const scoringForm = document.getElementById('scoringForm');
 const loadingOverlay = document.getElementById('loadingOverlay');
 const submitBtn = document.getElementById('submitBtn');
@@ -25,6 +26,7 @@ const rankingTableBody = document.getElementById('rankingTableBody');
 const deleteEntryBtn = document.getElementById('deleteEntryBtn');
 
 let cameraStream = null;
+let currentFacingMode = 'environment'; // デフォルトは外カメ
 
 // ファイル選択
 imageInput.addEventListener('change', function(event) {
@@ -56,24 +58,56 @@ function stopCamera() {
     toggleCameraBtn.classList.add('from-pink-600', 'to-rose-600', 'hover:from-pink-500', 'hover:to-rose-500');
 }
 
+// ▼▼▼ カメラ起動・切り替えロジック ▼▼▼
 async function startCamera() {
+    // 既存のストリームがあれば停止
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+    }
+
     try {
-        cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const constraints = { 
+            video: { 
+                facingMode: currentFacingMode 
+            } 
+        };
+        
+        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
         cameraVideo.srcObject = cameraStream;
         cameraArea.classList.remove('hidden');
         imagePreview.classList.add('hidden');
+        
+        // インカメの時だけ左右反転させる
+        if (currentFacingMode === 'user') {
+            cameraVideo.style.transform = "scaleX(-1)";
+        } else {
+            cameraVideo.style.transform = "none";
+        }
+
         toggleCameraBtn.innerHTML = '<i class="fa-solid fa-xmark mr-2"></i><span>カメラを閉じる</span>';
         toggleCameraBtn.classList.remove('from-pink-600', 'to-rose-600', 'hover:from-pink-500', 'hover:to-rose-500');
         toggleCameraBtn.classList.add('bg-gray-600', 'hover:bg-gray-500');
     } catch (err) {
         alert("カメラを起動できませんでした: " + err);
+        // エラー時はボタン状態を戻す
+        stopCamera();
     }
 }
 
+// カメラ起動トグル
 toggleCameraBtn.addEventListener('click', () => {
     if (cameraStream) stopCamera();
     else startCamera();
 });
+
+// カメラ切り替えボタン
+if (switchCameraBtn) {
+    switchCameraBtn.addEventListener('click', () => {
+        // user <-> environment を切り替え
+        currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+        startCamera(); // 再起動
+    });
+}
 
 takePhotoBtn.addEventListener('click', () => {
     if (!cameraStream) return;
@@ -81,8 +115,13 @@ takePhotoBtn.addEventListener('click', () => {
     canvas.width = cameraVideo.videoWidth;
     canvas.height = cameraVideo.videoHeight;
     const ctx = canvas.getContext('2d');
-    ctx.translate(canvas.width, 0);
-    ctx.scale(-1, 1);
+    
+    // インカメの時だけCanvasも反転
+    if (currentFacingMode === 'user') {
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+    }
+    
     ctx.drawImage(cameraVideo, 0, 0, canvas.width, canvas.height);
     const dataUrl = canvas.toDataURL("image/jpeg");
     imagePreview.src = dataUrl;
@@ -116,7 +155,7 @@ hamburger.addEventListener('click', () => {
     hamburger.classList.toggle('open');
 });
 
-// ▼▼▼ ランキング関連＆スクロール処理 ▼▼▼
+// ▼▼▼ ランキング関連 ▼▼▼
 
 async function fetchRanking() {
     if(!rankingTableBody) return;
@@ -164,13 +203,12 @@ async function fetchRanking() {
 document.addEventListener('DOMContentLoaded', () => {
     fetchRanking();
 
-    // ▼▼▼ 修正: 点数要素そのものを画面の真ん中に持ってくる ▼▼▼
     const scoreElement = document.getElementById('currentScoreValue');
     if (scoreElement) {
         setTimeout(() => {
             scoreElement.scrollIntoView({ 
                 behavior: 'smooth', 
-                block: 'center' // 要素を画面中央に配置
+                block: 'center' 
             });
         }, 300);
     }
