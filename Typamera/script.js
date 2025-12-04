@@ -1,5 +1,3 @@
-// Typamera/script.js
-
 // --- DOM要素の取得 ---
 const webcam = document.getElementById('webcam');
 const statusElement = document.getElementById('status');
@@ -15,6 +13,10 @@ const detailsButton = document.getElementById('detailsButton');
 const detailsModal = document.getElementById('detailsModal');
 const closeButton = document.getElementsByClassName('closeButton')[0];
 const classListContainer = document.getElementById('classListContainer');
+
+// ハンバーガーメニュー用DOM要素 (HTMLから移動)
+const hamburger = document.getElementById('hamburgerMenu');
+const sidebar = document.getElementById('sidebar');
 
 // --- 定数とゲーム状態 ---
 const GAME_DURATION = 60;
@@ -61,7 +63,7 @@ function stopCamera() {
     webcam.style.display = 'none';
 }
 
-// ▼▼▼ 変更点: ここではカメラを起動せず、モデル読み込みだけ行う ▼▼▼
+// モデル読み込みだけ行う
 async function initializeApp() {
     statusElement.textContent = 'AIモデルをロード中です...';
     startButton.disabled = true;
@@ -96,7 +98,9 @@ function resetGame() {
 
     scoreElement.textContent = score;
     timerElement.textContent = time;
-    targetWordElement.textContent = targetWord;
+    
+    // targetWordElementの表示をリセット
+    targetWordElement.textContent = targetWord; 
     
     typingInput.value = '';
     typingInput.disabled = true;
@@ -107,7 +111,7 @@ function resetGame() {
     detailsButton.disabled = false;
 }
 
-// ▼▼▼ 変更点: asyncにし、ここでカメラを起動する ▼▼▼
+// asyncにし、ここでカメラを起動する
 async function startGame() {
     if (isGameRunning || !model) return;
     
@@ -182,7 +186,8 @@ async function detectObjects(forceNewWord = false) {
             statusElement.textContent = 'お題が見つかりません。カメラに何か映してください。';
             if (targetWord !== '---') {
                 targetWord = '---';
-                targetWordElement.textContent = targetWord;
+                // 日本語表示の部分も消す
+                targetWordElement.textContent = targetWord; 
             }
         }
     } catch (e) {
@@ -190,14 +195,18 @@ async function detectObjects(forceNewWord = false) {
     }
 }
 
-// --- 4. お題の設定 ---
+// --- 4. お題の設定 (日本語表示機能を追加) ---
 function setNewTargetWord(detectedClasses) {
     if (detectedClasses.length > 0) {
         const randomIndex = Math.floor(Math.random() * detectedClasses.length);
         const newWord = detectedClasses[randomIndex];
         
         targetWord = newWord;
-        targetWordElement.textContent = targetWord;
+        
+        // 英語と日本語の両方を表示
+        const japaneseWord = COCO_CLASSES[newWord] || '不明'; 
+        targetWordElement.innerHTML = `${targetWord} <span class="text-xl md:text-2xl text-gray-400 font-normal ml-2">(${japaneseWord})</span>`;
+        
         feedbackElement.textContent = 'New Target!';
         
         // アニメーション用クラスの付け外し
@@ -218,7 +227,7 @@ typingInput.addEventListener('input', () => {
     if (typedText === targetWord) {
         score++;
         scoreElement.textContent = score;
-        feedbackElement.textContent = `⭕ Excellent!`;
+        feedbackElement.textContent = '⭕ Excellent!';
         feedbackElement.className = "mt-2 text-lg font-bold min-h-[1.5em] text-green-400";
         
         isTargetLocked = false;
@@ -243,7 +252,7 @@ typingInput.addEventListener('keydown', (e) => {
 
 // --- 6. ゲーム終了 ---
 function endGame() {
-    // ▼▼▼ 変更点: ゲーム終了時にカメラを停止する ▼▼▼
+    // ゲーム終了時にカメラを停止する
     stopCamera();
     
     statusElement.textContent = `Finish! Score: ${score}`;
@@ -261,6 +270,7 @@ window.addEventListener('beforeunload', stopCamera);
 // --- 8. モーダル処理 ---
 function populateClassList() {
     let htmlContent = '';
+    // バッククォート文字列内のHTMLを修正
     for (const [english, japanese] of Object.entries(COCO_CLASSES)) {
         htmlContent += `<p class="bg-white/5 p-2 rounded border-l-4 border-amber-500"><strong class="text-amber-300">${english}</strong>: ${japanese}</p>`;
     }
@@ -291,10 +301,7 @@ window.addEventListener('click', (event) => {
     }
 });
 
-// ▼▼▼ ハンバーガーメニュー制御 ▼▼▼
-const hamburger = document.getElementById('hamburgerMenu');
-const sidebar = document.getElementById('sidebar');
-
+// ▼▼▼ ハンバーガーメニュー制御 (HTMLから移動) ▼▼▼
 hamburger.addEventListener('click', () => {
     sidebar.classList.toggle('-translate-x-full');
     hamburger.classList.toggle('open');
