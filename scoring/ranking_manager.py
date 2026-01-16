@@ -15,9 +15,9 @@ SPREADSHEET_KEY = "17QqxdjbY5OM8zGLPcrjn_-d1ZVCifvFH4dp9feOjfDk"
 
 # Cloudinaryの設定
 cloudinary.config(
-  cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME", "dqluizsxn"), 
-  api_key = os.environ.get("CLOUDINARY_API_KEY", "733249596838179"), 
-  api_secret = os.environ.get("CLOUDINARY_API_SECRET", "fJ1tto-eIbv19SBQBkI9r5rJb3Q"),
+  cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME",), 
+  api_key = os.environ.get("CLOUDINARY_API_KEY",), 
+  api_secret = os.environ.get("CLOUDINARY_API_SECRET",),
   secure = True
 )
 
