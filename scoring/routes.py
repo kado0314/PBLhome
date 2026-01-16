@@ -2,9 +2,7 @@ import base64
 from flask import Blueprint, render_template, request, jsonify
 from .scorer_main import FashionScorer
 from .chart_generator import generate_radar_chart
-import sys
-import os
-from ranking_manager import get_ranking, add_ranking_entry, delete_ranking_entry
+from .ranking_manager import get_ranking, add_ranking_entry, delete_ranking_entry
 
 scoring_bp = Blueprint(
     "scoring", 
