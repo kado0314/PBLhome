@@ -4,16 +4,7 @@ from .scorer_main import FashionScorer
 from .chart_generator import generate_radar_chart
 import sys
 import os
-
-# ranking_managerのある親ディレクトリをパスに追加
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-try:
-    from ranking_manager import get_ranking, add_ranking_entry, delete_ranking_entry
-except ImportError:
-    # ローカル開発などでファイルがない場合のダミー
-    def get_ranking(): return []
-    def add_ranking_entry(n, s, d, i=None): return False, "Module Error"
-    def delete_ranking_entry(n, d): return False
+from ranking_manager import get_ranking, add_ranking_entry, delete_ranking_entry
 
 scoring_bp = Blueprint(
     "scoring", 
