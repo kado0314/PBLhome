@@ -1,5 +1,3 @@
-# rules_db.py
-
 # 評価軸のウェイト（合計100点）
 SCORE_WEIGHTS = {
     "color_harmony": 20.0,
@@ -32,9 +30,6 @@ BIAS_ADJUSTMENTS = {
 TPO_RULES = {
     "date": {"forbidden_patterns": ["camouflage", "excessive_logos"], "min_cleanliness": 0.6},
     "work": {"forbidden_patterns": ["neon_colors", "shorts"], "min_cleanliness": 0.8},
-    
-    # ▼▼▼ 修正: 「友達と遊ぶ」シーンを追加 ▼▼▼
-    "friends": {"forbidden_patterns": [], "min_cleanliness": 0.5} # 特に禁止事項なし、清潔感の基準も少し緩め
-    # ▲▲▲ 修正 ▲▲▲
+    "friends": {"forbidden_patterns": [], "min_cleanliness": 0.5}
 }
 
