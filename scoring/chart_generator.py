@@ -7,14 +7,9 @@ import base64
 import os
 from .rules_db import SCORE_WEIGHTS
 
-# ダークテーマ設定
 plt.style.use('dark_background')
 
 def generate_radar_chart(aspect_scores):
-    """
-    横棒グラフ（データバー）の極太文字バージョン
-    """
-    # --- フォント設定 ---
     try:
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         font_path = os.path.join(base_dir, 'fonts', 'KleeOne-Regular.ttf')
@@ -28,7 +23,6 @@ def generate_radar_chart(aspect_scores):
     except Exception as e:
         print(f"Font Warning: {e}")
 
-    # --- データ準備 ---
     labels = []
     percentages = []
     text_labels = []
@@ -59,31 +53,23 @@ def generate_radar_chart(aspect_scores):
     percentages = percentages[::-1]
     text_labels = text_labels[::-1]
 
-    # --- 描画 ---
-    # ▼▼▼ サイズ設定 (少し横長に) ▼▼▼
     fig, ax = plt.subplots(figsize=(12, 7))
     fig.patch.set_facecolor('none')
     ax.set_facecolor('none')
 
     y_pos = range(len(labels))
 
-    # 背景バー
     ax.barh(y_pos, [100]*len(y_pos), height=0.6, align='center', 
             color='gray', alpha=0.2, edgecolor='none')
 
-    # スコアバー
     ax.barh(y_pos, percentages, height=0.6, align='center', 
             color='#ec4899', edgecolor='none', alpha=0.9)
 
-    # テキスト表示
     for i, (pct, text) in enumerate(zip(percentages, text_labels)):
-        # ▼▼▼ 文字サイズを 18 (極太) に変更 ▼▼▼
         ax.text(102, i, text, va='center', ha='left', 
                 color='white', fontsize=18, fontweight='bold')
 
-    # --- 調整 ---
     ax.set_yticks(y_pos)
-    # ▼▼▼ 項目名も 18 に変更 ▼▼▼
     ax.set_yticklabels(labels, fontsize=18, color='white')
     
     ax.set_xlim(0, 125) 
@@ -94,7 +80,6 @@ def generate_radar_chart(aspect_scores):
     ax.spines['left'].set_visible(False)
     ax.tick_params(axis='y', length=0)
 
-    # 保存
     buf = io.BytesIO()
     plt.savefig(buf, format='png', bbox_inches='tight', transparent=True)
     buf.seek(0)
