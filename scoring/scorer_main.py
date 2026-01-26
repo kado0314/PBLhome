@@ -8,11 +8,9 @@ import os
 import google.generativeai as genai
 
 class FashionScorer:
-    # ▼▼▼ 性別引数を削除 ▼▼▼
     def __init__(self, user_locale: str = "ja-JP"):
         self.user_locale = user_locale
         
-        # Render等の環境変数からAPIキーを取得
         GENAI_API_KEY = os.environ.get('GOOGLE_API_KEY')
         
         if not GENAI_API_KEY:
@@ -20,7 +18,6 @@ class FashionScorer:
         else:
             genai.configure(api_key=GENAI_API_KEY)
         
-        # モデル設定
         MODEL_NAME = "gemini-2.5-flash"
         generation_config = {
             "temperature": 1,
@@ -52,10 +49,8 @@ class FashionScorer:
         if img is None:
             return {"error": "Invalid image data."}
 
-        # ▼▼▼ 性別に関する処理を削除 ▼▼▼
         intended_scene = metadata.get("intended_scene", "friends")
 
-        # ▼▼▼ プロンプトの強化（3つのポイントと数値を強制） ▼▼▼
         prompt = f"""
         あなたはプロのファッションスタイリスト兼、厳格な審査員です。画像を分析し、JSON形式で採点してください。
         
@@ -69,6 +64,7 @@ class FashionScorer:
         想定シーン: {intended_scene}
 
         【出力形式】
+        想定シーンについて、「date」は「デート」、「work」は「仕事」、「friends」は「友達と遊ぶ」に置き換えてください。
         以下のJSON形式のみを出力してください。Markdownのコードブロックは不要です。
         {{
             "total_score": (0-100の整数),
@@ -100,7 +96,6 @@ class FashionScorer:
 
         except Exception as e:
             print(f"Gemini API Error: {e}")
-            # エラー時のダミーデータ
             return {
                 "overall_score": 0,
                 "recommendation": "採点エラーが発生しました。",
