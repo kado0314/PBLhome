@@ -159,7 +159,7 @@ def add_ranking_entry(name, score, delete_pass, image_data_base64=None):
         date_str = datetime.now().strftime("%Y-%m-%d")
         clean_pass = _normalize_str(delete_pass)
         
-        sheet.append_row([clean_name, score, date_str, clean_pass, image_url])
+        sheet.append_row([clean_name, score, date_str, f"'{clean_pass}", image_url])
         
         # 追加後にTOP10制限処理を実行
         prune_ranking(sheet)
@@ -188,6 +188,8 @@ def delete_ranking_entry(name, delete_pass, sheet_obj=None):
             row_num = i + 2
             sheet_name = _normalize_str(record.get('name', ''))
             sheet_pass = _normalize_str(record.get('delete_pass', ''))
+            if sheet_pass.startswith("'"):
+                sheet_pass = sheet_pass[1:]
             
             if sheet_name == target_name and sheet_pass == target_pass:
                 image_url = record.get('image_url', '')
