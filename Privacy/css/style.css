@@ -1,13 +1,9 @@
-/* Privacy/css/style.css */
-
-/* Google Fonts Import */
 @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;500;800&family=Noto+Sans+JP:wght@300;500;700&display=swap');
 
 body {
     font-family: 'Lexend', 'Noto Sans JP', sans-serif;
 }
 
-/* カスタムスクロールバー */
 ::-webkit-scrollbar {
     width: 8px;
 }
@@ -19,10 +15,9 @@ body {
     border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #6366f1; /* Indigo */
+    background: #6366f1;
 }
 
-/* ハンバーガーメニューのアニメーション */
 .hamburger-menu.open span:nth-child(1) {
     transform: translateY(13px) rotate(45deg);
 }
@@ -33,17 +28,15 @@ body {
     transform: translateY(-13px) rotate(-45deg);
 }
 
-/* ステータスの状態による色変化 */
 .cooldown-active {
-    color: #1f2937 !important; /* gray-900 text */
-    background-color: #fbbf24 !important; /* amber-400 bg */
-    border-color: #f59e0b !important; /* amber-500 border */
+    color: #1f2937 !important;
+    background-color: #fbbf24 !important;
+    border-color: #f59e0b !important;
 }
 
-/* 検出済みの危険色 */
 .status-danger {
     color: white !important;
-    background-color: #ef4444 !important; /* red-500 */
+    background-color: #ef4444 !important;
     border-color: #b91c1c !important;
     animation: pulse 2s infinite;
 }
