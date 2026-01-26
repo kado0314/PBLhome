@@ -58,14 +58,12 @@ def saiten():
     
     user_score = result.get("overall_score", 0)
 
-    # ▼▼▼ ランクイン判定ロジック ▼▼▼
     ranking = get_ranking()
     rank_in = False
     
     if len(ranking) < 10:
         rank_in = True
     else:
-        # 10位（リストの最後）のスコアより高ければランクイン
         lowest_score = ranking[-1]['score']
         if user_score >= lowest_score:
             rank_in = True
@@ -78,10 +76,8 @@ def saiten():
         feedback=result.get("explanations", ["詳細な説明はありません。"]),
         radar_chart_data=radar_chart_data,
         selected_scene=intended_scene,
-        rank_in=rank_in  # ▼ これをHTMLに渡す
+        rank_in=rank_in
     )
-
-# ▼▼▼ ランキング用API ▼▼▼
 
 @scoring_bp.route("/api/ranking", methods=["GET"])
 def api_get_ranking():
@@ -94,13 +90,11 @@ def api_add_ranking():
     name = data.get("name")
     score = data.get("score")
     delete_pass = data.get("delete_pass")
-    # 画像データを受け取る
     image_data = data.get("image_data")
     
     if not name or score is None:
         return jsonify({"success": False, "message": "データが不足しています"}), 400
         
-    # 戻り値 (success, message) を受け取る
     success, msg = add_ranking_entry(name, float(score), delete_pass, image_data)
     
     if success:
