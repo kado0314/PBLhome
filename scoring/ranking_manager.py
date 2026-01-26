@@ -178,7 +178,7 @@ def delete_ranking_entry(name, delete_pass, sheet_obj=None):
             if not client: return False
             sheet = client.open_by_key(SPREADSHEET_KEY).sheet1
             
-        records = sheet.get_all_records(numericise_data=False)
+        records = sheet.get_all_records()
         deleted = False
         target_name = _normalize_str(name)
         target_pass = _normalize_str(delete_pass)
