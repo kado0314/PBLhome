@@ -7,13 +7,10 @@ import base64
 import os
 import json
 
-# スコープ設定
 SCOPE = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
 
-# スプレッドシートID
 SPREADSHEET_KEY = "17QqxdjbY5OM8zGLPcrjn_-d1ZVCifvFH4dp9feOjfDk"
 
-# Cloudinaryの設定
 cloudinary.config(
   cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME",), 
   api_key = os.environ.get("CLOUDINARY_API_KEY",), 
@@ -43,10 +40,6 @@ def upload_image_to_cloudinary(image_data_base64):
     """画像をCloudinaryにアップロード"""
     if not image_data_base64: return ""
     try:
-        # ▼▼▼ 修正箇所: ヘッダーを削除しない！ ▼▼▼
-        # CloudinaryのSDKは、data:image/... というヘッダーを見て「これは画像データだ」と判断します。
-        # これがないとファイルパスだと誤解して「ファイル名が長すぎる」というエラーになります。
-        
         response = cloudinary.uploader.upload(
             image_data_base64, 
             folder="fashion_ranking",
@@ -99,7 +92,6 @@ def get_ranking():
             except: continue
             
         sorted_records = sorted(valid_records, key=lambda x: x['score'], reverse=True)
-        # 表示用はTOP10のみ
         return sorted_records[:10]
     except Exception as e:
         print(f"Ranking Fetch Error: {e}")
@@ -109,7 +101,6 @@ def prune_ranking(sheet):
     """10件超え自動削除（TOP10のみ維持）"""
     try:
         records = sheet.get_all_records()
-        # ▼▼▼ 修正箇所: 10件より多ければ削除開始 ▼▼▼
         if len(records) <= 10: return
         
         def get_score(r):
@@ -118,7 +109,6 @@ def prune_ranking(sheet):
             
         sorted_records = sorted(records, key=get_score, reverse=True)
         
-        # 11位以降（インデックス10～）を削除対象にする
         items_to_delete = sorted_records[10:]
         
         print(f"--- Pruning: Cleaning up {len(items_to_delete)} items ---")
@@ -145,7 +135,6 @@ def add_ranking_entry(name, score, delete_pass, image_data_base64=None):
         if "image_url" not in header:
             sheet.update_cell(1, len(header) + 1, "image_url")
 
-        # 重複チェック
         clean_name = _normalize_str(name)
         records = sheet.get_all_records()
         for r in records:
@@ -161,7 +150,6 @@ def add_ranking_entry(name, score, delete_pass, image_data_base64=None):
         
         sheet.append_row([clean_name, score, date_str, f"'{clean_pass}", image_url])
         
-        # 追加後にTOP10制限処理を実行
         prune_ranking(sheet)
         
         return True, "登録しました"
@@ -183,7 +171,6 @@ def delete_ranking_entry(name, delete_pass, sheet_obj=None):
         target_name = _normalize_str(name)
         target_pass = _normalize_str(delete_pass)
 
-        # 後ろから検索
         for i, record in reversed(list(enumerate(records))):
             row_num = i + 2
             sheet_name = _normalize_str(record.get('name', ''))
