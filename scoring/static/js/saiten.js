@@ -1,5 +1,3 @@
-// scoring/static/js/saiten.js
-
 const imageInput = document.getElementById('imageInput');
 const imagePreview = document.getElementById('imagePreview');
 const fileNameDisplay = document.getElementById('fileName');
@@ -7,14 +5,13 @@ const toggleCameraBtn = document.getElementById('toggleCameraBtn');
 const cameraArea = document.getElementById('cameraArea');
 const cameraVideo = document.getElementById('cameraVideo');
 const takePhotoBtn = document.getElementById('takePhotoBtn');
-const switchCameraBtn = document.getElementById('switchCameraBtn'); // 追加
+const switchCameraBtn = document.getElementById('switchCameraBtn');
 const scoringForm = document.getElementById('scoringForm');
 const loadingOverlay = document.getElementById('loadingOverlay');
 const submitBtn = document.getElementById('submitBtn');
 const hamburger = document.getElementById('hamburgerMenu');
 const sidebar = document.getElementById('sidebar');
 
-// ランキング用
 const openRankingViewBtn = document.getElementById('openRankingViewBtn');
 const rankingViewModal = document.getElementById('rankingViewModal');
 const closeRankingViewBtn = document.getElementById('closeRankingViewBtn');
@@ -26,9 +23,8 @@ const rankingTableBody = document.getElementById('rankingTableBody');
 const deleteEntryBtn = document.getElementById('deleteEntryBtn');
 
 let cameraStream = null;
-let currentFacingMode = 'environment'; // デフォルトは外カメ
+let currentFacingMode = 'environment';
 
-// ファイル選択
 imageInput.addEventListener('change', function(event) {
     const file = event.target.files[0];
     if (file) {
@@ -58,9 +54,7 @@ function stopCamera() {
     toggleCameraBtn.classList.add('from-pink-600', 'to-rose-600', 'hover:from-pink-500', 'hover:to-rose-500');
 }
 
-// ▼▼▼ カメラ起動・切り替えロジック ▼▼▼
 async function startCamera() {
-    // 既存のストリームがあれば停止
     if (cameraStream) {
         cameraStream.getTracks().forEach(track => track.stop());
     }
@@ -77,7 +71,6 @@ async function startCamera() {
         cameraArea.classList.remove('hidden');
         imagePreview.classList.add('hidden');
         
-        // インカメの時だけ左右反転させる
         if (currentFacingMode === 'user') {
             cameraVideo.style.transform = "scaleX(-1)";
         } else {
@@ -89,23 +82,19 @@ async function startCamera() {
         toggleCameraBtn.classList.add('bg-gray-600', 'hover:bg-gray-500');
     } catch (err) {
         alert("カメラを起動できませんでした: " + err);
-        // エラー時はボタン状態を戻す
         stopCamera();
     }
 }
 
-// カメラ起動トグル
 toggleCameraBtn.addEventListener('click', () => {
     if (cameraStream) stopCamera();
     else startCamera();
 });
 
-// カメラ切り替えボタン
 if (switchCameraBtn) {
     switchCameraBtn.addEventListener('click', () => {
-        // user <-> environment を切り替え
         currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
-        startCamera(); // 再起動
+        startCamera();
     });
 }
 
@@ -116,7 +105,6 @@ takePhotoBtn.addEventListener('click', () => {
     canvas.height = cameraVideo.videoHeight;
     const ctx = canvas.getContext('2d');
     
-    // インカメの時だけCanvasも反転
     if (currentFacingMode === 'user') {
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
@@ -154,8 +142,6 @@ hamburger.addEventListener('click', () => {
     sidebar.classList.toggle('-translate-x-full');
     hamburger.classList.toggle('open');
 });
-
-// ▼▼▼ ランキング関連 ▼▼▼
 
 async function fetchRanking() {
     if(!rankingTableBody) return;
@@ -199,7 +185,6 @@ async function fetchRanking() {
     }
 }
 
-// ページ読み込み時の処理
 document.addEventListener('DOMContentLoaded', () => {
     fetchRanking();
 
